@@ -8,6 +8,10 @@ module pipelineCPU_datapath(
 lc3b_word pcmux_out;	
 lc3b_word pc_out;
 lc3b_word pc_plus2_out;
+lc3b_word if_id_pc_out;
+logic load_if_id;
+logic if_id_v_out;
+lc3b_word if_id_ir_out;
 /*END INTERNAL SIGNALS*/
 
 
@@ -37,7 +41,29 @@ plus2 pc_plus2
 /*END FETCH STAGE COMPONENTS*/
 
 /*FETCH-DECODE PIPE COMPONENTS*/
+register if_id_pc
+(
+	.clk,
+	.load(load_if_id),
+	.in(pc_plus2_out),
+	.out(if_id_pc_out)
+);
 
+register if_id_ir
+(
+	.clk,
+	.load(load_if_id),
+	.in(imem_rdata),
+	.out(if_id_ir_out)
+);
+
+register #(.width(1)) if_id_v
+(
+	.clk,
+	.load(load_if_id),
+	.in(load_if_id),
+	.out(if_id_v_out)
+);
 /*END FETCH-DECODE PIPE COMPONENTS*/
 
 /*DECODE STAGE COMPONENTS*/
