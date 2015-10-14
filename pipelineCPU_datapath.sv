@@ -1,6 +1,7 @@
 /*the datapath that contains everything for the pipeline CPU*/
 module pipelineCPU_datapath(
-	input clk
+	input clk,
+	input i_mem_resp
 	
 );
 
@@ -9,6 +10,7 @@ lc3b_word pcmux_out;
 lc3b_word pc_out;
 lc3b_word pc_plus2_out;
 lc3b_word if_id_pc_out;
+logic nor_gate_out;
 logic load_if_id;
 logic if_id_v_out;
 lc3b_word if_id_ir_out;
@@ -38,6 +40,24 @@ plus2 pc_plus2
 	.in(pc_out),
 	.out(pc_plus2_out)
 );
+
+nor3 #(.width(1)) nor_gate
+(
+	.a(),//ID.branch_stall
+	.b(),//mem_stall
+	.c(),//DEP_stall
+	.f(nor_gate_out)
+);
+
+and2 #(.width(1)) and_gate
+(
+	.a(i_mem_resp),
+	.b(nor_gate_out),
+	.f(load_if_id)
+	
+);
+
+
 /*END FETCH STAGE COMPONENTS*/
 
 /*FETCH-DECODE PIPE COMPONENTS*/
