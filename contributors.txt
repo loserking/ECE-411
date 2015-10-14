@@ -1,1 +1,2 @@
-Brian Schaab, bschaab, schaab2
+Contributors:
+    Name: Brian Schaab      Bitbucket Username: bschaab      NetID: schaab2
