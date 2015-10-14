@@ -1,5 +1,5 @@
-Analysis & Synthesis report for mp2
-Wed Oct 14 15:38:52 2015
+Analysis & Synthesis report for mp3
+Wed Oct 14 16:58:15 2015
 Quartus II 32-bit Version 13.1.4 Build 182 03/12/2014 SJ Full Version
 
 
@@ -41,9 +41,9 @@ applicable agreement for further details.
 +----------------------------------------------------------------------------------+
 ; Analysis & Synthesis Summary                                                     ;
 +------------------------------------+---------------------------------------------+
-; Analysis & Synthesis Status        ; Successful - Wed Oct 14 15:38:51 2015       ;
+; Analysis & Synthesis Status        ; Successful - Wed Oct 14 16:58:14 2015       ;
 ; Quartus II 32-bit Version          ; 13.1.4 Build 182 03/12/2014 SJ Full Version ;
-; Revision Name                      ; mp2                                         ;
+; Revision Name                      ; mp3                                         ;
 ; Top-level Entity Name              ; mp3                                         ;
 ; Family                             ; Cyclone IV GX                               ;
 ; Total logic elements               ; 0                                           ;
@@ -67,7 +67,7 @@ applicable agreement for further details.
 +----------------------------------------------------------------------------+--------------------+--------------------+
 ; Option                                                                     ; Setting            ; Default Value      ;
 +----------------------------------------------------------------------------+--------------------+--------------------+
-; Top-level entity name                                                      ; mp3                ; mp2                ;
+; Top-level entity name                                                      ; mp3                ; mp3                ;
 ; Family name                                                                ; Cyclone IV GX      ; Cyclone IV GX      ;
 ; Use smart compilation                                                      ; Off                ; Off                ;
 ; Enable parallel Assembler and TimeQuest Timing Analyzer during compilation ; On                 ; On                 ;
@@ -218,7 +218,7 @@ Note: For table entries with two numbers listed, the numbers in parentheses indi
 +----------------+--------------+
 ; Partition Name ; Elapsed Time ;
 +----------------+--------------+
-; Top            ; 00:00:00     ;
+; Top            ; 00:00:04     ;
 +----------------+--------------+
 
 
@@ -228,13 +228,24 @@ Note: For table entries with two numbers listed, the numbers in parentheses indi
 Info: *******************************************************************
 Info: Running Quartus II 32-bit Analysis & Synthesis
     Info: Version 13.1.4 Build 182 03/12/2014 SJ Full Version
-    Info: Processing started: Wed Oct 14 15:38:47 2015
-Info: Command: quartus_map --read_settings_files=on --write_settings_files=off mp3 -c mp2
+    Info: Processing started: Wed Oct 14 16:58:05 2015
+Info: Command: quartus_map --read_settings_files=on --write_settings_files=off mp3 -c mp3
 Info (20030): Parallel compilation is enabled and will use 4 of the 4 processors detected
-Info (12021): Found 1 design units, including 0 entities, in source file lc3b_types.sv
-    Info (12022): Found design unit 1: lc3b_types (SystemVerilog)
+Info (12021): Found 1 design units, including 1 entities, in source file register.sv
+    Info (12023): Found entity 1: register
+Info (12021): Found 1 design units, including 1 entities, in source file plus2.sv
+    Info (12023): Found entity 1: plus2
+Warning (10275): Verilog HDL Module Instantiation warning at pipelineCPU_datapath.sv(22): ignored dangling comma in List of Port Connections
+Info (12021): Found 1 design units, including 1 entities, in source file pipelineCPU_datapath.sv
+    Info (12023): Found entity 1: pipelineCPU_datapath
+Info (12021): Found 1 design units, including 1 entities, in source file mux3.sv
+    Info (12023): Found entity 1: mux3
 Info (12021): Found 1 design units, including 1 entities, in source file mp3.sv
     Info (12023): Found entity 1: mp3
+Info (12021): Found 1 design units, including 0 entities, in source file lc3b_types.sv
+    Info (12022): Found design unit 1: lc3b_types (SystemVerilog)
+Warning (10236): Verilog HDL Implicit Net warning at pipelineCPU_datapath.sv(17): created implicit net for "pcmux_sel"
+Warning (10236): Verilog HDL Implicit Net warning at pipelineCPU_datapath.sv(27): created implicit net for "load_pc"
 Info (12127): Elaborating entity "mp3" for the top level hierarchy
 Warning (12158): Entity "mp3" contains only dangling pins
 Info (16010): Generating hard_block partition "hard_block:auto_generated_inst"
@@ -244,10 +255,10 @@ Warning (21074): Design contains 1 input pin(s) that do not drive logic
 Info (21057): Implemented 1 device resources after synthesis - the final resource count might be different
     Info (21058): Implemented 1 input pins
     Info (21059): Implemented 0 output pins
-Info: Quartus II 32-bit Analysis & Synthesis was successful. 0 errors, 3 warnings
-    Info: Peak virtual memory: 403 megabytes
-    Info: Processing ended: Wed Oct 14 15:38:52 2015
-    Info: Elapsed time: 00:00:05
+Info: Quartus II 32-bit Analysis & Synthesis was successful. 0 errors, 6 warnings
+    Info: Peak virtual memory: 411 megabytes
+    Info: Processing ended: Wed Oct 14 16:58:15 2015
+    Info: Elapsed time: 00:00:10
     Info: Total CPU time (on all processors): 00:00:01
 
 
