@@ -6,26 +6,32 @@ module pipelineCPU_datapath(
 );
 
 /*INTERNAL SIGNALS*/
-lc3b_word pcmux_out;	
-lc3b_word pc_out;
-lc3b_word pc_plus2_out;
-lc3b_word if_id_pc_out;
-logic nor_gate_out;
-logic load_if_id;
-logic if_id_v_out;
-lc3b_word if_id_ir_out;
-lc3b_reg storemux_out;
-lc3b_reg destmux_out;
-lc3b_word sr1_out;
-lc3b_word sr2_out;
-lc3b_reg cc_out;
-lc3b_word id_ex_pc_out;
-lc3b_word id_ex_ir_out;
-lc3b_word id_ex_sr1_out;
-lc3b_word id_ex_sr2_out;
-lc3b_word id_ex_cc_out;
-lc3b_reg id_ex_drid_out;
-logic id_ex_v_out;
+	//FETCH STAGE INTERNAL SIGNALS//
+		lc3b_word pcmux_out;	
+		lc3b_word pc_out;
+		lc3b_word pc_plus2_out;
+		logic nor_gate_out;
+	//FETCH-DECODE STAGE INTERNAL SIGNALS//
+		lc3b_word if_id_pc_out;
+		logic load_if_id;
+		logic if_id_v_out;
+		lc3b_word if_id_ir_out;
+	//DECODE STAGE INTERNAL SIGNALS//
+		lc3b_reg storemux_out;
+		lc3b_reg destmux_out;
+		lc3b_word sr1_out;
+		lc3b_word sr2_out;
+		lc3b_reg cc_out;
+	//DECODE-EXECUTE STAGE INTERNAL SIGNAL//
+		lc3b_word id_ex_pc_out;
+		lc3b_word id_ex_ir_out;
+		lc3b_word id_ex_sr1_out;
+		lc3b_word id_ex_sr2_out;
+		lc3b_word id_ex_cc_out;
+		lc3b_reg id_ex_drid_out;
+		logic id_ex_v_out;
+	//EXECUTE STAGE INTERNAL SIGNALS//
+	
 /*END INTERNAL SIGNALS*/
 
 
@@ -212,7 +218,7 @@ register #(.width(1)) id_ex_v
 
 
 /*EXECUTE STAGE COMPONENTS*/
-/*sext #(.width(5)) sext5
+sext #(.width(5)) sext5
 (
      .in(),
 	 .out(sext5_out)
@@ -235,7 +241,7 @@ sext #(.width(11)) sext11
      .in(),
 	 .out(sext11_out)
 );
-*/
+
 
 /*END EXECUTE STAGE COMPONENTS*/
 
