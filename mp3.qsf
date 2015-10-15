@@ -42,13 +42,15 @@ set_global_assignment -name TOP_LEVEL_ENTITY mp3
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 13.1
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "16:57:05  OCTOBER 14, 2015"
 set_global_assignment -name LAST_QUARTUS_VERSION 13.1
+set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+set_global_assignment -name SYSTEMVERILOG_FILE and2input.sv
+set_global_assignment -name SYSTEMVERILOG_FILE nor3input.sv
 set_global_assignment -name SYSTEMVERILOG_FILE register.sv
 set_global_assignment -name SYSTEMVERILOG_FILE plus2.sv
 set_global_assignment -name SYSTEMVERILOG_FILE pipelineCPU_datapath.sv
 set_global_assignment -name SYSTEMVERILOG_FILE mux3.sv
 set_global_assignment -name SYSTEMVERILOG_FILE mp3.sv
 set_global_assignment -name SYSTEMVERILOG_FILE lc3b_types.sv
-set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
-set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
-set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

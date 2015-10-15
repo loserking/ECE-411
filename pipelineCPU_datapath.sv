@@ -24,7 +24,7 @@ mux3 pcmux
 	.a(pc_plus2_out),
 	.b(),//MEM.TARGET need this signal from MEM STAGE
 	.c(),//MEM.TRAP need this signal from MEM STAGE
-	.f(pcmux_out),
+	.f(pcmux_out)
 );
 
 register pc
@@ -41,7 +41,7 @@ plus2 pc_plus2
 	.out(pc_plus2_out)
 );
 
-nor3 #(.width(1)) nor_gate
+nor3input #(.width(1)) nor_gate
 (
 	.a(),//ID.branch_stall
 	.b(),//mem_stall
@@ -49,7 +49,7 @@ nor3 #(.width(1)) nor_gate
 	.f(nor_gate_out)
 );
 
-and2 #(.width(1)) and_gate
+and2input #(.width(1)) and_gate
 (
 	.a(i_mem_resp),
 	.b(nor_gate_out),
