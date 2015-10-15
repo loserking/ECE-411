@@ -38,6 +38,16 @@ module pipelineCPU_datapath(
 		lc3b_word addr2mux_out;
 		lc3b_word addr1mux_out;
 		lc3b_word sr2mux_out;
+	//EXECUTE-MEMORY STAGE INTERNAL SIGNALS//
+		lc3b_offset11 ex_mem_cs_out;
+		lc3b_word ex_mem_pc_out;
+		lc3b_reg ex_mem_cc_out;					//declaring as 3 bits but really the output is only 2 bits
+		lc3b_word ex_mem_alu_result_out;
+		lc3b_word ex_mem_ir_out;
+		lc3b_reg ex_mem_dr_out;
+	//MEMORY STAGE INTERNAL SIGNALS//
+	//MEMORY-WRITEBACK INTERNAL SIGNALS//
+		
 /*END INTERNAL SIGNALS*/
 
 
@@ -295,10 +305,163 @@ mux2 sr2mux
 /*END MEMORY STAGE COMPONENTS*/
 
 /*MEMORY-WRITEBACK PIPE COMPONENTS*/
+register ex_mem_address
+(
+	.clk,
+	.load(load_ex_mem),
+	.in(),//input from addressmux in ex stage
+	.out(mem_address)
+);
 
+register #(.width(11)) ex_mem_cs
+(
+	.clk,
+	.load(load_ex_mem),
+	.in(), //input 11 bits from execute stage
+	.out(ex_mem_cs_out)
+);
+
+
+register ex_mem_pc
+(
+	.clk,
+	.load(load_ex_mem),
+	.in(), //input from execute stage
+	.out(ex_mem_pc_out)
+);
+
+
+register #(.width(3)) ex_mem_cc
+(
+	.clk,
+	.load(load_ex_mem),
+	.in(),//input from ex is 3 bits
+	.out(ex_mem_cc_out[1:0])			//output for mem_cc is only 2 bits
+);
+
+
+register ex_mem_alu_result
+(
+	.clk,
+	.load(load_ex_mem),
+	.in(),//input is ex_alu_result
+	.out(ex_mem_alu_result_out)
+);
+
+
+register ex_mem_ir
+(
+	.clk,
+	.load(load_ex_mem),
+	.in(), //input is 16 bit signal from execute
+	.out(ex_mem_ir_out)
+);
+
+register #(.width(3)) ex_mem_dr
+(
+	.clk,
+	.load(load_ex_mem),
+	.in(), // input is 3 bits from execute
+	.out(ex_mem_dr_out)
+);
+
+
+register #(.width(1)) ex_mem_v
+(
+	.clk,
+	.load(load_ex_mem),
+	.in(), //input is 1 bit from execute
+	.out(ex_mem_v_out)
+);
 /*END MEMORY-WRITEBACK PIPE COMPONENTS*/
 
 /*WRITE BACK STAGE COMPONENTS*/
+register mem_wb_address
+(
+	.clk,
+	.load(load_mem_wb),
+	.in(mem_address),
+	.out(mem_wb_address_out)
+
+);
+
+register mem_wb_data
+(
+	.clk,
+	.load(load_mem_wb),
+	.in(),//data from mem stage logic
+	.out(mem_wb_data_out)
+);
+
+register #(.width(4)) mem_wb_cs
+(
+	.clk,
+	.load(load_mem_wb),
+	.in(ex_mem_cs_out[10:7]), //cs from mem phase 4 bits
+	.out() //from control store
+
+);
+
+
+register mem_wb_pc
+(
+	.clk,
+	.load(load_mem_wb),
+	.in(ex_mem_pc_out),
+	.out(mem_wb_pc_out)
+
+);
+
+register mem_wb_alu_result
+(
+	.clk,
+	.load(load_mem_wb),
+	.in(ex_mem_alu_result_out),//alu_result from mem phase
+	.out(mem_wb_alu_result_out)
+);
+
+register mem_wb_ir			//not used in this stage
+(						
+	.clk,
+	.load(load_mem_wb),
+	.in(ex_mem_ir_out),//mem_ir from mem stage
+	.out()
+);
+
+register #(.width(3)) mem_wb_dr
+(
+	.clk, 
+	.load(load_mem_wb),
+	.in(ex_mem_dr_out), //3 bit mem_dr signal from mem stage
+	.out(mem_wb_dr_out)
+
+);
+
+register #(.width(1)) mem_wb_v
+(
+	.clk, 
+	.load(load_mem_wb),
+	.in(), //1 bit input from mem stage !(mem_br_stall)
+	.out(mem_wb_v_out) 
+
+);
+ mux4 wb_mux
+ (
+	.sel(),//wb_mux_sel
+	.a(mem_wb_address_out),
+	.b(mem_wb_data_out),
+	.c(mem_wb_pc_out),
+	.d(mem_wb_alu_result_out),
+	.f(wb_regfile_data)
+ 
+ );
+ 
+ gencc wb_gencc
+ (
+	.in(wb_regfile_data),
+	.out(wb_gencc_out),
+ );
+
 
 /*END WRITE BACK STAGE COMPONENTS*/
 
