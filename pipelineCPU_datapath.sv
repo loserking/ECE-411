@@ -19,6 +19,13 @@ lc3b_reg destmux_out;
 lc3b_word sr1_out;
 lc3b_word sr2_out;
 lc3b_reg cc_out;
+lc3b_word id_ex_pc_out;
+lc3b_word id_ex_ir_out;
+lc3b_word id_ex_sr1_out;
+lc3b_word id_ex_sr2_out;
+lc3b_word id_ex_cc_out;
+lc3b_reg id_ex_drid_out;
+logic id_ex_v_out;
 /*END INTERNAL SIGNALS*/
 
 
@@ -138,7 +145,69 @@ register #(.width(3)) cc
 /*END DECODE STAGE COMPONENTS*/
 
 /*DECODE-EXECUTE PIPE COMPONENTS*/
+register id_ex_pc
+(
+	.clk,
+	.load(load_id_ex),
+	.in(if_id_pc_out),
+	.out(id_ex_pc_out)
+);
 
+register id_ex_cs
+(
+	.clk,
+	.load(load_id_ex),
+	.in(),//Need to take the output of the control store
+	.out()//id_ex_cs_out - need size first
+);
+
+register id_ex_ir
+(
+	.clk,
+	.load(load_id_ex),
+	.in(if_id_ir_out),
+	.out(id_ex_ir_out)
+);
+
+register id_ex_sr1
+(
+	.clk,
+	.load(load_id_ex),
+	.in(sr1_out),
+	.out(id_ex_sr1_out)
+);
+
+register id_ex_sr2
+(
+	.clk,
+	.load(load_id_ex),
+	.in(sr2_out),
+	.out(id_ex_sr2_out)
+);
+
+register #(.width(3)) id_ex_cc
+(
+	.clk,
+	.load(load_id_ex),
+	.in(cc_out),
+	.out(id_ex_cc_out)
+);
+
+register #(.width(3)) id_ex_drid
+(
+	.clk,
+	.load(load_id_ex),
+	.in(destmux_out),
+	.out(id_ex_drid_out)
+);
+
+register #(.width(1)) id_ex_v
+(
+	.clk,
+	.load(load_id_ex),
+	.in(load_id_ex),
+	.out(id_ex_v_out)
+);
 /*END DECODE-EXECUTE PIPE COMPONENTS*/
 
 
