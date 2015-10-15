@@ -31,7 +31,13 @@ module pipelineCPU_datapath(
 		lc3b_reg id_ex_drid_out;
 		logic id_ex_v_out;
 	//EXECUTE STAGE INTERNAL SIGNALS//
-	
+		lc3b_word sext5_out;
+		lc3b_word sext6_out;
+		lc3b_word sext9_out;
+		lc3b_word sext11_out;
+		lc3b_word addr2mux_out;
+		lc3b_word addr1mux_out;
+		lc3b_word sr2mux_out;
 /*END INTERNAL SIGNALS*/
 
 
@@ -55,7 +61,8 @@ register pc
 
 plus2 pc_plus2
 (
-	.in(pc_out),.sel(pcmux_sel), //Need to bring this from control rom
+	.in(pc_out),
+	.sel(pcmux_sel), //Need to bring this from control rom
 	.a(pc_plus2_out),
 	.b(),//MEM.TARGET need this signal from MEM STAGE
 	.c(),//MEM.TRAP need this signal from MEM STAGE
@@ -220,20 +227,14 @@ register #(.width(1)) id_ex_v
 /*EXECUTE STAGE COMPONENTS*/
 sext #(.width(5)) sext5
 (
-     .in(),
+     .in(id_ex_ir_out[4:0]),
 	 .out(sext5_out)
 );
 
 sext #(.width(6)) sext6
 (
-     .in(),
+     .in(id_ex_ir_out[5:0]),
 	 .out(sext6_out)
-);
-
-sext #(.width(9)) sext9
-(
-     .in(),
-	 .out(sext9_out)
 );
 
 sext #(.width(11)) sext11
@@ -242,7 +243,46 @@ sext #(.width(11)) sext11
 	 .out(sext11_out)
 );
 
+sixteenbitadder address_adder
+(
+	.a(addr1mux_out),
+	.b(),
+	.out(address_adder_out),
+);
 
+mux2 addr3mux
+(
+	.sel(),//addr3mux_sel from control store
+	.a(), 
+	.b(),
+	.f()
+);
+
+mux4 addr2mux
+(
+	.sel(), //addr2mux_sel from control store
+	.a(16'b0000000000000000),
+	.b(sext5_out),
+	.c(sext9_out),
+	.d(sext11_out),
+	.f(addr2mux_out)
+);
+
+mux2 addr1mux
+(
+	.sel(),//addr1mux_sel from control store
+	.a(id_ex_pc_out),
+	.b(id_ex_sr1_out),
+	.f(addr1mux_out)
+);
+
+mux2 sr2mux
+(
+	.sel(),//sr2mux_sel from control store
+	.a(id_ex_sr2_out),
+	.b(sext5_out),
+	.f(sr2mux_out)
+);
 /*END EXECUTE STAGE COMPONENTS*/
 
 /*EXECUTE-MEMORY PIPE COMPONENTS*/
