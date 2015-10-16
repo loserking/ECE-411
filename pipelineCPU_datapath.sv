@@ -1,7 +1,8 @@
 /*the datapath that contains everything for the pipeline CPU*/
 module pipelineCPU_datapath(
 	input clk,
-	input i_mem_resp
+	input i_mem_resp,
+	input lc3b_word dcache_rdata
 	
 );
 
@@ -11,6 +12,7 @@ module pipelineCPU_datapath(
 		lc3b_word pc_out;
 		lc3b_word pc_plus2_out;
 		logic nor_gate_out;
+		lc3b_word mem_target;
 	//FETCH-DECODE STAGE INTERNAL SIGNALS//
 		lc3b_word if_id_pc_out;
 		logic load_if_id;
@@ -45,7 +47,11 @@ module pipelineCPU_datapath(
 		lc3b_word ex_mem_alu_result_out;
 		lc3b_word ex_mem_ir_out;
 		lc3b_reg ex_mem_dr_out;
+		lc3b_word ex_mem_address_out;
 	//MEMORY STAGE INTERNAL SIGNALS//
+		lc3b_word Dcachesplitmux_out;
+		lc3b_word Dcachewritemux_out;
+		lc3b_word Dcachereadmux_out;
 	//MEMORY-WRITEBACK INTERNAL SIGNALS//
 		
 /*END INTERNAL SIGNALS*/
@@ -56,7 +62,7 @@ mux3 pcmux
 (
 	.sel(pcmux_sel), //Need to bring this from control rom
 	.a(pc_plus2_out),
-	.b(),//MEM.TARGET need this signal from MEM STAGE
+	.b(mem_target), //From MEM_address in MEM STAGE
 	.c(),//MEM.TRAP need this signal from MEM STAGE
 	.f(pcmux_out)
 );
@@ -72,11 +78,6 @@ register pc
 plus2 pc_plus2
 (
 	.in(pc_out),
-	.sel(pcmux_sel), //Need to bring this from control rom
-	.a(pc_plus2_out),
-	.b(),//MEM.TARGET need this signal from MEM STAGE
-	.c(),//MEM.TRAP need this signal from MEM STAGE
-	.f(pcmux_out),
 	.out(pc_plus2_out)
 );
 
@@ -150,7 +151,7 @@ regfile regfile
 	.src_b(storemux_out),
 	.dest(),//WB.DRID
 	.reg_a(sr1_out),
-	.reg_b(sr2_out),
+	.reg_b(sr2_out)
 );
 
 register #(.width(3)) cc
@@ -257,7 +258,7 @@ sixteenbitadder address_adder
 (
 	.a(addr1mux_out),
 	.b(),
-	.out(address_adder_out),
+	.out(address_adder_out)
 );
 
 mux2 addr3mux
@@ -296,21 +297,12 @@ mux2 sr2mux
 /*END EXECUTE STAGE COMPONENTS*/
 
 /*EXECUTE-MEMORY PIPE COMPONENTS*/
-
-/*END EXECUTE-MEMORY PIPE COMPONENTS*/
-
-
-/*MEMORY STAGE COMPONENTS*/
-
-/*END MEMORY STAGE COMPONENTS*/
-
-/*MEMORY-WRITEBACK PIPE COMPONENTS*/
 register ex_mem_address
 (
 	.clk,
 	.load(load_ex_mem),
 	.in(),//input from addressmux in ex stage
-	.out(mem_address)
+	.out(ex_mem_address_out)
 );
 
 register #(.width(11)) ex_mem_cs
@@ -373,9 +365,58 @@ register #(.width(1)) ex_mem_v
 	.in(), //input is 1 bit from execute
 	.out(ex_mem_v_out)
 );
-/*END MEMORY-WRITEBACK PIPE COMPONENTS*/
+/*END EXECUTE-MEMORY PIPE COMPONENTS*/
 
-/*WRITE BACK STAGE COMPONENTS*/
+
+/*MEMORY STAGE COMPONENTS*/
+assign mem_target = ex_mem_address_out;
+assign mem_trap = dcache_rdata;
+
+zext #(.width(8)) HBzext
+(
+     .in(dcache_rdata[15:8]),
+	 .out(HBzext_out)
+);
+
+zext #(.width(8)) LBzext
+(
+     .in(dcache_rdata[7:0]),
+	 .out(LBzext_out)
+);
+
+mux2 #(.width(16)) Dcachesplitmux
+(
+    .sel(ex_mem_address_out[0]),
+	 .a(LBzext_out),
+	 .b(HBzext_out),
+	 .f(Dcachesplitmux_out)
+);
+
+mux2 #(.width(16)) Dcachereadmux
+(
+    .sel(dcachereadmux_sel), //FROM control ROM
+	 .a(dcache_rdata), //Output from the D-Cache on read
+	 .b(Dcachesplitmux_out),
+	 .f(Dcachereadmux_out)
+);
+
+bytefill #(.width(8)) bytefill
+(
+     .in(ex_mem_alu_result_out[7:0]),
+	  .bytefill_sel(ex_mem_address_out[0]),
+	 .out(bytefill_out)
+);
+
+mux2 #(.width(16)) Dcachewritemux
+(
+    .sel(dcachewritemux_sel), //FROM control ROM
+	 .a(ex_mem_alu_result_out), 
+	 .b(bytefill_out),
+	 .f(Dcachewritemux_out)
+);
+/*END MEMORY STAGE COMPONENTS*/
+
+/*MEMORY-WRITEBACK PIPE COMPONENTS*/
 register mem_wb_address
 (
 	.clk,
@@ -389,7 +430,7 @@ register mem_wb_data
 (
 	.clk,
 	.load(load_mem_wb),
-	.in(),//data from mem stage logic
+	.in(Dcachemux_out),//Data from D-Cache
 	.out(mem_wb_data_out)
 );
 
@@ -401,7 +442,6 @@ register #(.width(4)) mem_wb_cs
 	.out() //from control store
 
 );
-
 
 register mem_wb_pc
 (
@@ -445,6 +485,10 @@ register #(.width(1)) mem_wb_v
 	.out(mem_wb_v_out) 
 
 );
+/*END MEMORY-WRITEBACK PIPE COMPONENTS*/
+
+/*WRITE BACK STAGE COMPONENTS*/
+
  mux4 wb_mux
  (
 	.sel(),//wb_mux_sel
@@ -459,7 +503,7 @@ register #(.width(1)) mem_wb_v
  gencc wb_gencc
  (
 	.in(wb_regfile_data),
-	.out(wb_gencc_out),
+	.out(wb_gencc_out)
  );
 
 
