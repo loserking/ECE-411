@@ -49,7 +49,7 @@ module pipelineCPU_datapath(
 	//EXECUTE-MEMORY STAGE INTERNAL SIGNALS//
 		lc3b_offset11 ex_mem_cs_out;
 		lc3b_word ex_mem_pc_out;
-		lc3b_reg ex_mem_cc_out;					//declaring as 3 bits but really the output is only 2 bits
+		lc3b_reg ex_mem_cc_out;					
 		lc3b_word ex_mem_alu_result_out;
 		lc3b_word ex_mem_ir_out;
 		lc3b_reg ex_mem_dr_out;
@@ -367,7 +367,7 @@ register ex_mem_pc
 (
 	.clk,
 	.load(load_ex_mem),
-	.in(), //input from execute stage
+	.in(id_ex_pc_out), 
 	.out(ex_mem_pc_out)
 );
 
@@ -377,7 +377,7 @@ register #(.width(3)) ex_mem_cc
 	.clk,
 	.load(load_ex_mem),
 	.in(),//input from ex is 3 bits
-	.out(ex_mem_cc_out[1:0])			//output for mem_cc is only 2 bits
+	.out(ex_mem_cc_out)			
 );
 
 
@@ -385,7 +385,7 @@ register ex_mem_alu_result
 (
 	.clk,
 	.load(load_ex_mem),
-	.in(),//input is ex_alu_result
+	.in(aluresultmux_out),
 	.out(ex_mem_alu_result_out)
 );
 
@@ -394,7 +394,7 @@ register ex_mem_ir
 (
 	.clk,
 	.load(load_ex_mem),
-	.in(), //input is 16 bit signal from execute
+	.in(id_ex_ir_out), 
 	.out(ex_mem_ir_out)
 );
 
@@ -402,7 +402,7 @@ register #(.width(3)) ex_mem_dr
 (
 	.clk,
 	.load(load_ex_mem),
-	.in(), // input is 3 bits from execute
+	.in(id_ex_drid), 
 	.out(ex_mem_dr_out)
 );
 
