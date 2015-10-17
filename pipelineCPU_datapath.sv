@@ -54,6 +54,11 @@ module pipelineCPU_datapath(
 		lc3b_word ex_mem_ir_out;
 		lc3b_reg ex_mem_dr_out;
 		lc3b_word ex_mem_address_out;
+		logic and1_out;
+		logic and2_out;
+		logic and3_out; //same as what would be "and4"
+		logic we0;
+		logic we1;
 	//MEMORY STAGE INTERNAL SIGNALS//
 		lc3b_word Dcachesplitmux_out;
 		lc3b_word Dcachewritemux_out;
@@ -463,6 +468,53 @@ mux2 #(.width(16)) Dcachewritemux
 	 .b(bytefill_out),
 	 .f(Dcachewritemux_out)
 );
+
+
+//WE logic
+
+and2input and1
+(
+	.x(), //D_CACHE_R/W control signal
+	.y(!ex_mem_address_out[0]),
+	.z(and1_out)
+
+);
+and2input and2
+(
+	.x(), //D_CACHE_R/W control signal
+	.y(ex_mem_address_out[0]),
+	.z(and2_out)
+
+);
+
+and2input and3
+(
+	.x(), //D_CACHE_R/W control signal
+	.y(), //DATA_SIZE control signal
+	.z(and3_out)
+
+);
+
+
+mux2 #(.width(1)) we_mux1
+(
+	.sel(and3_out),
+	.a(and1_out),
+	.b(1'b1),
+	.f(we0)
+
+);
+mux2 #(.width(1)) we_mux2
+(
+	.sel(and3_out),
+	.a(and2_out),
+	.b(1'b1),
+	.f(we1)
+
+);
+
+
+
 /*END MEMORY STAGE COMPONENTS*/
 
 /*MEMORY-WRITEBACK PIPE COMPONENTS*/
