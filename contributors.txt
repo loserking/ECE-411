@@ -1,3 +1,4 @@
 Contributors:
     Name: Brian Schaab          Bitbucket Username: bschaab      		NetID: schaab2
-	Name: Athanasios Sofronis	Bitbucket Username:	thanasi_sofronis	NetID: sofroni2				
+    Name: Athanasios Sofronis	Bitbucket Username:	thanasi_sofronis	NetID: sofroni2
+    Name: George Shen 		Bitbucket Username: gshen2		       NetID: gshen2				
