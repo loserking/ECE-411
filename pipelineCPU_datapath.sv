@@ -40,10 +40,16 @@ module pipelineCPU_datapath(
 		lc3b_word addr2mux_out;
 		lc3b_word addr1mux_out;
 		lc3b_word sr2mux_out;
+		lc3b_word lshf1_out;
+		lc3b_word zextshf1_out;
+		lc3b_word addr3mux_out;
+		lc3b_word shft_out;
+		lc3b_word alu_out;
+		lc3b_word aluresultmux_out;
 	//EXECUTE-MEMORY STAGE INTERNAL SIGNALS//
 		lc3b_offset11 ex_mem_cs_out;
 		lc3b_word ex_mem_pc_out;
-		lc3b_reg ex_mem_cc_out;					//declaring as 3 bits but really the output is only 2 bits
+		lc3b_reg ex_mem_cc_out;					
 		lc3b_word ex_mem_alu_result_out;
 		lc3b_word ex_mem_ir_out;
 		lc3b_reg ex_mem_dr_out;
@@ -182,7 +188,7 @@ register id_ex_cs
 	.clk,
 	.load(load_id_ex),
 	.in(),//Need to take the output of the control store
-	.out()//id_ex_cs_out - need size first
+	.out()//id_ex_cs_out
 );
 
 register id_ex_ir
@@ -248,25 +254,45 @@ sext #(.width(6)) sext6
 	 .out(sext6_out)
 );
 
+sext #(.width(9)) sext9
+(
+     .in(id_ex_ir_out[8:0]),
+	 .out(sext9_out)
+);
+
+
 sext #(.width(11)) sext11
 (
-     .in(),
+     .in(id_ex_ir_out[10:0]),
 	 .out(sext11_out)
+);
+
+lshf1 lshf1
+(
+	.sel(),//NEED to get from CONTROL ROM
+	.in(addr2mux_out),
+	.out(lshf1_out)
 );
 
 sixteenbitadder address_adder
 (
 	.a(addr1mux_out),
-	.b(),
+	.b(lshf1_out),
 	.out(address_adder_out)
 );
 
 mux2 addr3mux
 (
 	.sel(),//addr3mux_sel from control store
-	.a(), 
-	.b(),
-	.f()
+	.a(address_adder_out), 
+	.b(zextlshf1_out),
+	.f(addr3mux_out)
+);
+
+zextlshf1 zextlshf1
+(
+	.in(id_ex_ir_out[7:0]),
+	.out(zextlshf1_out)
 );
 
 mux4 addr2mux
@@ -287,6 +313,29 @@ mux2 addr1mux
 	.f(addr1mux_out)
 );
 
+shft shft
+(
+	.in(id_ex_sr1_out),
+	.shiftword(id_ex_ir_out[5:0]),
+	.out(shft_out)
+);
+
+alu alu
+(
+	.aluop(),//Needs to come from Control Store
+   .a(id_ex_sr1_out),
+	.b(sr2mux_out),
+   .f(alu_out)
+);
+
+mux2 aluresultmux
+(
+	.sel(),//Needs to come from Control Store
+	.a(shft_out),
+	.b(alu_out),
+	.f(aluresultmux_out)
+);
+
 mux2 sr2mux
 (
 	.sel(),//sr2mux_sel from control store
@@ -301,7 +350,7 @@ register ex_mem_address
 (
 	.clk,
 	.load(load_ex_mem),
-	.in(),//input from addressmux in ex stage
+	.in(addr3mux_out),
 	.out(ex_mem_address_out)
 );
 
@@ -318,7 +367,7 @@ register ex_mem_pc
 (
 	.clk,
 	.load(load_ex_mem),
-	.in(), //input from execute stage
+	.in(id_ex_pc_out), 
 	.out(ex_mem_pc_out)
 );
 
@@ -328,7 +377,7 @@ register #(.width(3)) ex_mem_cc
 	.clk,
 	.load(load_ex_mem),
 	.in(),//input from ex is 3 bits
-	.out(ex_mem_cc_out[1:0])			//output for mem_cc is only 2 bits
+	.out(ex_mem_cc_out)			
 );
 
 
@@ -336,7 +385,7 @@ register ex_mem_alu_result
 (
 	.clk,
 	.load(load_ex_mem),
-	.in(),//input is ex_alu_result
+	.in(aluresultmux_out),
 	.out(ex_mem_alu_result_out)
 );
 
@@ -345,7 +394,7 @@ register ex_mem_ir
 (
 	.clk,
 	.load(load_ex_mem),
-	.in(), //input is 16 bit signal from execute
+	.in(id_ex_ir_out), 
 	.out(ex_mem_ir_out)
 );
 
@@ -353,7 +402,7 @@ register #(.width(3)) ex_mem_dr
 (
 	.clk,
 	.load(load_ex_mem),
-	.in(), // input is 3 bits from execute
+	.in(id_ex_drid), 
 	.out(ex_mem_dr_out)
 );
 
