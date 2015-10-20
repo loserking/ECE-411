@@ -1,0 +1,29 @@
+/* A Cheat sheet for doing branching operations with GIT*/
+
+
+git branch                           - shows all current branches
+git branch <branch name>             - creates a local branch with the specified name
+git checkout -b <branch name>        - creates a switches to a local branch with the specified name (replaces doing git branch and then a git checkout)
+git checkout <branch name>           - switches to the branch name specified 
+
+Once on the new local branch, make changes as needed and commit often. You can also use git push -u origin <branch name> to push up the branch to the repository.
+
+git merge <branch>                   - merges the current branch with the other branch. Most often this will be used while on master and merging your branch back into master. EX: git merge test1 -This will merge test1 into the master.
+
+Once the branch is merged, use : git push -u origin master       to push the merged code onto the repository.
+
+
+
+
+
+
+
+
+
+/*Other useful git commands*/
+
+git status                          - shows the status of your current work, what changes are staged to be committed
+git add <filename>                  - add file to be pushed to the online repo
+git rm <filename>                   - remove file from the online repo ---- KNOW WHAT YOU'RE REMOVING IF YOU PLAN TO USE
+git push -u origin master           - pushes up to the online repo
+git pull                            - pulls all recent changes from the online repo. SHOULD BE DONE IMMEDIATELY WHEN YOU START WORK EACH DAY
