@@ -13,6 +13,7 @@ module pipelineCPU_datapath(
 		lc3b_word pc_plus2_out;
 		logic nor_gate_out;
 		lc3b_word mem_target;
+																//		test 2 words 		//
 	//FETCH-DECODE STAGE INTERNAL SIGNALS//
 		lc3b_word if_id_pc_out;
 		logic load_if_id;
