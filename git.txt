@@ -3,7 +3,7 @@
 
 git branch                           - shows all current branches
 git branch <branch name>             - creates a local branch with the specified name
-git checkout -b <branch name>        - creates a switches to a local branch with the specified name (replaces doing git branch and then a git checkout)
+git checkout -b <branch name>        - creates and switches to a local branch with the specified name (replaces doing git branch and then a git checkout)
 git checkout <branch name>           - switches to the branch name specified 
 
 Once on the new local branch, make changes as needed and commit often. You can also use git push -u origin <branch name> to push up the branch to the repository.
