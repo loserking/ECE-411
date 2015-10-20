@@ -5,7 +5,6 @@ module pipelineCPU_datapath(
 	input lc3b_word dcache_rdata
 	
 );
-//I AM A TEST COMMENT. THIS IS FOR A BRANCHING WITH GIT TEST//
 /*INTERNAL SIGNALS*/
 	//FETCH STAGE INTERNAL SIGNALS//
 		lc3b_word pcmux_out;	
@@ -13,7 +12,6 @@ module pipelineCPU_datapath(
 		lc3b_word pc_plus2_out;
 		logic nor_gate_out;
 		lc3b_word mem_target;
-																//		test 2 words 		//
 	//FETCH-DECODE STAGE INTERNAL SIGNALS//
 		lc3b_word if_id_pc_out;
 		logic load_if_id;
@@ -471,49 +469,49 @@ mux2 #(.width(16)) Dcachewritemux
 );
 
 
-//WE logic
 
-and2input and1
-(
-	.x(), //D_CACHE_R/W control signal
-	.y(!ex_mem_address_out[0]),
-	.z(and1_out)
+    /*Begin DCache Write Enable Logic*/
+    and2input and1
+    (
+	    .x(), //D_CACHE_R/W control signal
+	    .y(!ex_mem_address_out[0]),
+	    .z(and1_out)
 
-);
-and2input and2
-(
-	.x(), //D_CACHE_R/W control signal
-	.y(ex_mem_address_out[0]),
-	.z(and2_out)
+    );
+    and2input and2
+    (
+	    .x(), //D_CACHE_R/W control signal
+	    .y(ex_mem_address_out[0]),
+	    .z(and2_out)
 
-);
+    );
 
-and2input and3
-(
-	.x(), //D_CACHE_R/W control signal
-	.y(), //DATA_SIZE control signal
-	.z(and3_out)
+    and2input and3
+    (
+	    .x(), //D_CACHE_R/W control signal
+	    .y(), //DATA_SIZE control signal
+	    .z(and3_out)
 
-);
+    );
 
 
-mux2 #(.width(1)) we_mux1
-(
-	.sel(and3_out),
-	.a(and1_out),
-	.b(1'b1),
-	.f(we0)
+    mux2 #(.width(1)) we_mux1
+    (
+	    .sel(and3_out),
+	    .a(and1_out),
+	    .b(1'b1),
+	    .f(we0)
 
-);
-mux2 #(.width(1)) we_mux2
-(
-	.sel(and3_out),
-	.a(and2_out),
-	.b(1'b1),
-	.f(we1)
+    );
+    mux2 #(.width(1)) we_mux2
+    (
+	    .sel(and3_out),
+	    .a(and2_out),
+	    .b(1'b1),
+	    .f(we1)
 
-);
-
+    );
+    /*End DCache Write Enable Logic*/
 
 
 /*END MEMORY STAGE COMPONENTS*/
