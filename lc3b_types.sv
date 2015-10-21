@@ -69,8 +69,6 @@ typedef struct packed
 	logic dcachereadmux_sel;
 	logic dcachewritemux_sel;
 	logic dcache_enable;
-	
-
 }lc3b_control_word;
 
 endpackage : lc3b_types

@@ -1,8 +1,10 @@
 /*the datapath that contains everything for the pipeline CPU*/
+import lc3b_types::*;
 module pipelineCPU_datapath(
 	input clk,
 	input i_mem_resp,
 	input imem_rdata,
+	input d_mem_resp,
 	input lc3b_word dcache_rdata
 	
 );
@@ -13,6 +15,9 @@ module pipelineCPU_datapath(
 		lc3b_word pc_plus2_out;
 		logic nor_gate_out;
 		lc3b_word mem_target;
+		logic [1:0] pc_mux_sel;
+		logic load_pc;
+		assign load_pc = 1; //Only for cp1
 	//FETCH-DECODE STAGE INTERNAL SIGNALS//
 		lc3b_word if_id_pc_out;
 		logic load_if_id;
@@ -25,6 +30,7 @@ module pipelineCPU_datapath(
 		lc3b_word sr2_out;
 		lc3b_reg cc_out;
 		logic dep_stall;
+		lc3b_control_word control_store;
 	//DECODE-EXECUTE STAGE INTERNAL SIGNAL//
 		lc3b_word id_ex_pc_out;
 		lc3b_word id_ex_ir_out;
@@ -33,6 +39,7 @@ module pipelineCPU_datapath(
 		lc3b_word id_ex_cc_out;
 		lc3b_reg id_ex_drid_out;
 		logic id_ex_v_out;
+		logic load_id_ex;
 	//EXECUTE STAGE INTERNAL SIGNALS//
 		lc3b_word sext5_out;
 		lc3b_word sext6_out;
@@ -61,6 +68,7 @@ module pipelineCPU_datapath(
 		lc3b_reg ex_mem_dr_out;
 		lc3b_word ex_mem_address_out;
 		logic ex_mem_v_out;
+		logic load_ex_mem;
 	//MEMORY STAGE INTERNAL SIGNALS//
 		lc3b_word Dcachesplitmux_out;
 		lc3b_word Dcachewritemux_out;
@@ -93,6 +101,7 @@ module pipelineCPU_datapath(
 		lc3b_word mem_wb_alu_result_out;
 		lc3b_word mem_wb_data_out;
 		logic mem_wb_v_out;
+		logic load_mem_wb;
 	//WRITEBACK INTERNAL SIGNALS//
 		logic wb_load_cc_and_out;
 		logic wb_load_reg_and_out;
@@ -171,9 +180,17 @@ register #(.width(1)) if_id_v
 /*END FETCH-DECODE PIPE COMPONENTS*/
 
 /*DECODE STAGE COMPONENTS*/
+control_rom control_rom
+(
+	.opcode(if_id_ir_out[15:12]),
+   .ir11(if_id_ir_out[11]),
+   .ir5(if_id_ir_out[5]),
+   .ctrl(control_store)
+);
+
 mux2 #(.width(3)) storemux
 (
-	.sel(storemux_sel), //Need to bring this from control rom
+	.sel(control_store.storemux_sel), //Need to bring this from control rom(storemux_sel)
 	.a(if_id_ir_out[2:0]),
 	.b(if_id_ir_out[11:9]),
 	.f(storemux_out)
@@ -181,7 +198,7 @@ mux2 #(.width(3)) storemux
 
 mux2 #(.width(3)) destmux
 (
-	.sel(destmux_sel), //Need to bring this from control rom
+	.sel(control_store.destmux_sel), //Need to bring this from control rom(destmux_sel)
 	.a(if_id_ir_out[11:9]),
 	.b(3'b111),
 	.f(destmux_out)
@@ -229,6 +246,8 @@ dependencylogic dependencylogic
 /*END DECODE STAGE COMPONENTS*/
 
 /*DECODE-EXECUTE PIPE COMPONENTS*/
+assign load_id_ex = 1;
+
 register id_ex_pc
 (
 	.clk,
@@ -423,6 +442,8 @@ mux2 sr2mux
 /*END EXECUTE STAGE COMPONENTS*/
 
 /*EXECUTE-MEMORY PIPE COMPONENTS*/
+assign load_ex_mem = 1;
+
 register ex_mem_address
 (
 	.clk,
@@ -522,7 +543,7 @@ assign mem_trap = dcache_rdata;
 
 	mux2 #(.width(16)) Dcachereadmux
 	(
-		 .sel(dcachereadmux_sel), //FROM control ROM
+		 .sel(control_store.dcachereadmux_sel), //FROM control ROM(dcachereadmux_sel)
 		 .a(dcache_rdata), //Output from the D-Cache on read
 		 .b(Dcachesplitmux_out),
 		 .f(Dcachereadmux_out)
@@ -539,7 +560,7 @@ assign mem_trap = dcache_rdata;
 
 	mux2 #(.width(16)) Dcachewritemux
 	(
-		 .sel(dcachewritemux_sel), //FROM control ROM
+		 .sel(control_store.dcachewritemux_sel), //FROM control ROM(dcachewritemux_sel)
 		 .a(ex_mem_alu_result_out), 
 		 .b(bytefill_out),
 		 .f(Dcachewritemux_out)
@@ -593,7 +614,7 @@ assign mem_trap = dcache_rdata;
 	 
 and2input DCache_enable_andGate
 (
-	.x(DCache_enable),
+	.x(control_store.dcache_enable), // from control rom dcache_enable
 	.y(ex_mem_v),
 	.z(Dcache_enable_v)
 ); 
@@ -674,6 +695,8 @@ and2input mem_stall_andGate
 /*END MEMORY STAGE COMPONENTS*/
 
 /*MEMORY-WRITEBACK PIPE COMPONENTS*/
+assign load_mem_wb = d_mem_resp;
+
 register mem_wb_address
 (
 	.clk,
