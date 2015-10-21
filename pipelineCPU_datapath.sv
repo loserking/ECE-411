@@ -46,6 +46,9 @@ module pipelineCPU_datapath(
 		lc3b_word shft_out;
 		lc3b_word alu_out;
 		lc3b_word aluresultmux_out;
+		logic ex_load_cc_and_out;
+		logic ex_load_reg_and_out;
+		logic ex_br_stall_and_out;
 	//EXECUTE-MEMORY STAGE INTERNAL SIGNALS//
 		lc3b_offset11 ex_mem_cs_out;
 		lc3b_word ex_mem_pc_out;
@@ -74,7 +77,10 @@ module pipelineCPU_datapath(
 		logic JSRAND;
 		logic TAKEBR;
 	//MEMORY-WRITEBACK INTERNAL SIGNALS//
-		
+	
+	//WRITEBACK INTERNAL SIGNALS//
+		logic wb_load_cc_and_out;
+		logic wb_load_reg_and_out;
 /*END INTERNAL SIGNALS*/
 
 
@@ -84,7 +90,7 @@ mux3 pcmux
 	.sel(pc_mux_sel), //Need to bring this from control rom
 	.a(pc_plus2_out),
 	.b(mem_target), //From MEM_address in MEM STAGE
-	.c(),//MEM.TRAP need this signal from MEM STAGE
+	.c(mem_trap),//MEM_TRAP is the trap vector 
 	.f(pcmux_out)
 );
 
@@ -102,15 +108,15 @@ plus2 pc_plus2
 	.out(pc_plus2_out)
 );
 
-nor3input #(.width(1)) nor_gate
+nor3input #(.width(1)) if_valid_nor
 (
 	.a(),//ID.branch_stall
-	.b(),//mem_stall
-	.c(),//DEP_stall
+	.b(mem_stall),//signal for memory not being ready
+	.c(dep_stall),
 	.f(nor_gate_out)
 );
 
-and2input #(.width(1)) and_gate
+and2input #(.width(1)) if_valid_and
 (
 	.a(i_mem_resp),
 	.b(nor_gate_out),
@@ -167,10 +173,10 @@ mux2 #(.width(3)) destmux
 regfile regfile
 (
 	.clk,
-	.in(),//WB.regfile.data	
+	.in(wb_regfile_data),//data to load into register from the wb stage
 	.src_a(if_id_ir_out[8:6]),
 	.src_b(storemux_out),
-	.dest(),//WB.DRID
+	.dest(mem_wb_dr_out),// destination register in the wb stage
 	.reg_a(sr1_out),
 	.reg_b(sr2_out)
 );
@@ -178,11 +184,10 @@ regfile regfile
 register #(.width(3)) cc
 (
 	.clk,
-	.load(),//WB.loadCC	
-	.in(),//WB.ccdata
+	.load(wb_load_cc_and_out),//Signal from WB stage to load cc register	
+	.in(wb_gencc_out),//WB_gencc -- the generated condition code data
 	.out(cc_out)
 );
-//Still need dependency logic//
 //Still need branch stall logic//
 //Still need control store//
 dependencylogic dependencylogic
@@ -196,11 +201,11 @@ dependencylogic dependencylogic
 	.mem_dr(ex_mem_dr_out),
 	.wb_dr(mem_wb_dr_out),
 	.v_ex_ld_reg(), //Need to get this from the execute stage
-	.v_mem_ld_reg(), //Need to get this from the memory stage
-	.v_wb_ld_reg(), //Need to get this from the writeback stage
+	.v_mem_ld_reg(mem_load_reg_valid), //signal from mem that says mem loads register
+	.v_wb_ld_reg(wb_load_reg_and_out), //Signal from wb that says wb loads register
 	.v_ex_ld_cc(), //Need to get this from the execute stage
-	.v_mem_ld_cc(), //Need to get this from the memory stage
-	.v_wb_ld_cc(), //Need to get this from the writeback stage
+	.v_mem_ld_cc(mem_load_cc_valid), //Signal from mem that says mem loads cc register
+	.v_wb_ld_cc(wb_load_cc_and_out), //Signal from wb that says wb loads cc register
 	.dep_stall(dep_stall)
 );
 
@@ -375,6 +380,29 @@ mux2 sr2mux
 	.b(sext5_out),
 	.f(sr2mux_out)
 );
+
+	/*Begin Execute dependency logic*/
+	and2input ex_load_cc_and
+	(
+		.x(), //Need to get load_cc from Control Store
+		.y(id_ex_v_out),
+		.z(ex_load_cc_and_out)
+	);
+	
+	and2input ex_load_reg_and
+	(
+		.x(), //Need to get load_reg from control store
+		.y(id_ex_v_out),
+		.z(ex_load_reg_and_out)
+	);
+	
+	and2input ex_br_stall_and
+	(
+		.x(), //Need to get BR stall from control store
+		.y(id_ex_v_out),
+		.z(ex_br_stall_and_out)
+	);
+	
 /*END EXECUTE STAGE COMPONENTS*/
 
 /*EXECUTE-MEMORY PIPE COMPONENTS*/
@@ -483,6 +511,7 @@ assign mem_trap = dcache_rdata;
 		 .f(Dcachereadmux_out)
 	);
 	/*End DCache Read Logic*/
+	
 	/*Begin DCache Write Logic*/
 	bytefill #(.width(8)) bytefill
 	(
@@ -649,7 +678,7 @@ register #(.width(4)) mem_wb_cs
 (
 	.clk,
 	.load(load_mem_wb),
-	.in(ex_mem_cs_out[10:7]), //cs from mem phase 4 bits
+	.in(), //cs from mem phase 4 bits
 	.out() //from control store
 
 );
@@ -717,7 +746,22 @@ register #(.width(1)) mem_wb_v
 	.out(wb_gencc_out)
  );
 
-
+	/*Begin WB stage ld_cc and ld_reg logic*/
+	and2input wb_load_cc_and
+	(
+		.x(),//Needs to be control store ld_cc bit
+		.y(mem_wb_v_out),
+		.z(wb_load_cc_and_out)
+	);
+	
+	and2input wb_load_reg_and
+	(
+		.x(),//Needs to be the control store ld_reg bit
+		.y(mem_wb_v_out),
+		.z(wb_load_reg_and_out)
+	);
+	/*End WB stage ld_cc and ld_reg logic*/
+	
 /*END WRITE BACK STAGE COMPONENTS*/
 
 
