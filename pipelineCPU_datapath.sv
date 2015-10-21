@@ -85,6 +85,7 @@ module pipelineCPU_datapath(
 		lc3b_word HBzext_out;
 		lc3b_word LBzext_out;
 		lc3b_word bytefill_out;
+		lc3b_word Dcachemux_out;
 	//MEMORY-WRITEBACK INTERNAL SIGNALS//
 		lc3b_reg mem_wb_dr_out;
 		lc3b_word mem_wb_address_out;
