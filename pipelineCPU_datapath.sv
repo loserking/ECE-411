@@ -53,15 +53,25 @@ module pipelineCPU_datapath(
 		lc3b_word ex_mem_ir_out;
 		lc3b_reg ex_mem_dr_out;
 		lc3b_word ex_mem_address_out;
+	//MEMORY STAGE INTERNAL SIGNALS//
+		lc3b_word Dcachesplitmux_out;
+		lc3b_word Dcachewritemux_out;
+		lc3b_word Dcachereadmux_out;
 		logic and1_out;
 		logic and2_out;
 		logic and3_out; //same as what would be "and4"
 		logic we0;
 		logic we1;
-	//MEMORY STAGE INTERNAL SIGNALS//
-		lc3b_word Dcachesplitmux_out;
-		lc3b_word Dcachewritemux_out;
-		lc3b_word Dcachereadmux_out;
+		logic Dcache_enable;
+		logic Dcache_enable_v;
+		logic mem_load_cc_valid;
+		logic mem_load_reg_valid;
+		logic mem_br_stall_valid;
+		logic cccomp_out;
+		logic orgate_out;
+		logic TRAPAND;
+		logic JSRAND;
+		logic TAKEBR;
 	//MEMORY-WRITEBACK INTERNAL SIGNALS//
 		
 /*END INTERNAL SIGNALS*/
@@ -70,7 +80,7 @@ module pipelineCPU_datapath(
 /*FETCH STAGE COMPONENTS*/
 mux3 pcmux 
 (
-	.sel(pcmux_sel), //Need to bring this from control rom
+	.sel(pc_mux_sel), //Need to bring this from control rom
 	.a(pc_plus2_out),
 	.b(mem_target), //From MEM_address in MEM STAGE
 	.c(),//MEM.TRAP need this signal from MEM STAGE
@@ -425,49 +435,52 @@ register #(.width(1)) ex_mem_v
 assign mem_target = ex_mem_address_out;
 assign mem_trap = dcache_rdata;
 
-zext #(.width(8)) HBzext
-(
-     .in(dcache_rdata[15:8]),
-	 .out(HBzext_out)
-);
 
-zext #(.width(8)) LBzext
-(
-     .in(dcache_rdata[7:0]),
-	 .out(LBzext_out)
-);
+	/*Begin DCache Read Logic*/
+	zext #(.width(8)) HBzext
+	(
+		  .in(dcache_rdata[15:8]),
+		 .out(HBzext_out)
+	);
 
-mux2 #(.width(16)) Dcachesplitmux
-(
-    .sel(ex_mem_address_out[0]),
-	 .a(LBzext_out),
-	 .b(HBzext_out),
-	 .f(Dcachesplitmux_out)
-);
+	zext #(.width(8)) LBzext
+	(
+		  .in(dcache_rdata[7:0]),
+		 .out(LBzext_out)
+	);
 
-mux2 #(.width(16)) Dcachereadmux
-(
-    .sel(dcachereadmux_sel), //FROM control ROM
-	 .a(dcache_rdata), //Output from the D-Cache on read
-	 .b(Dcachesplitmux_out),
-	 .f(Dcachereadmux_out)
-);
+	mux2 #(.width(16)) Dcachesplitmux
+	(
+		 .sel(ex_mem_address_out[0]),
+		 .a(LBzext_out),
+		 .b(HBzext_out),
+		 .f(Dcachesplitmux_out)
+	);
 
-bytefill #(.width(8)) bytefill
-(
-     .in(ex_mem_alu_result_out[7:0]),
-	  .bytefill_sel(ex_mem_address_out[0]),
-	 .out(bytefill_out)
-);
+	mux2 #(.width(16)) Dcachereadmux
+	(
+		 .sel(dcachereadmux_sel), //FROM control ROM
+		 .a(dcache_rdata), //Output from the D-Cache on read
+		 .b(Dcachesplitmux_out),
+		 .f(Dcachereadmux_out)
+	);
+	/*End DCache Read Logic*/
+	/*Begin DCache Write Logic*/
+	bytefill #(.width(8)) bytefill
+	(
+		  .in(ex_mem_alu_result_out[7:0]),
+		  .bytefill_sel(ex_mem_address_out[0]),
+		 .out(bytefill_out)
+	);
 
-mux2 #(.width(16)) Dcachewritemux
-(
-    .sel(dcachewritemux_sel), //FROM control ROM
-	 .a(ex_mem_alu_result_out), 
-	 .b(bytefill_out),
-	 .f(Dcachewritemux_out)
-);
-
+	mux2 #(.width(16)) Dcachewritemux
+	(
+		 .sel(dcachewritemux_sel), //FROM control ROM
+		 .a(ex_mem_alu_result_out), 
+		 .b(bytefill_out),
+		 .f(Dcachewritemux_out)
+	);
+	/*End DCache Write Logic*/
 
 
     /*Begin DCache Write Enable Logic*/
@@ -512,6 +525,86 @@ mux2 #(.width(16)) Dcachewritemux
 
     );
     /*End DCache Write Enable Logic*/
+	 
+	 
+and2input DCache_enable_andGate
+(
+	.x(DCache_enable),
+	.y(ex_mem_v),
+	.z(Dcache_enable_v)
+); 
+
+and2input mem_stall_andGate
+(
+	.x(), //DCache_R signal from D cache
+	.y(Dcache_enable_v),
+	.z(mem_stall)
+);
+
+
+
+	/*Begin MEM_DEP_CHECK_LOGIC*/
+	and2input load_cc
+	(
+		.x(),//CS load CC signal
+		.y(ex_mem_v),
+		.z(mem_load_cc_valid)
+	);
+	and2input load_reg
+	(
+		.x(), //CS load REG signal
+		.y(ex_mem_v),
+		.z(mem_load_reg_valid)
+	);
+	and2input br_stall
+	(
+		.x(), //CS BR STALL SIGNAL
+		.y(ex_mem_v),
+		.z(mem_br_stall_valid)
+	);
+	/*End MEM_DEP_CHECK_LOGIC*/
+	
+	/*Begin BR_LOGIC*/
+	cccomp cccomp
+	(
+		.a(ex_mem_cc),
+		.b(ex_mem_ir[11:9]),
+		.out(cccomp_out)
+	);
+	BR_box magic_box
+	(
+		.a(TRAPAND),
+		.b(JSRAND),
+		.c(TAKEBR),
+		.out(pc_mux_sel)
+	);
+	or2input br_or
+	(
+		.x(),//bring in UNCOND_OP from CS
+		.y(),//bring in TRAP_OP from CS
+		.z(orgate_out)
+	);
+	and2input br_and1
+	(
+		.x(orgate_out),
+		.y(ex_mem_v),
+		.z(TRAPAND)
+	);
+	and2input br_and2
+	(
+		.x(),//bring in JSR_OP from CS
+		.y(ex_mem_v),
+		.z(JSRAND)
+	);
+	and3input br_and3
+	(
+		.r(ex_mem_v),
+		.x(), //bring in BR_OP from CS
+		.y(cccomp_out),
+		.z(TAKEBR)
+	
+	);
+	/*END BR_LOGIC*/
 
 
 /*END MEMORY STAGE COMPONENTS*/
