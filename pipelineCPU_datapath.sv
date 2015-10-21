@@ -385,8 +385,8 @@ alu alu
 mux2 aluresultmux
 (
 	.sel(),//Needs to come from Control Store
-	.a(shft_out),
-	.b(alu_out),
+	.a(alu_out),
+	.b(shft_out),
 	.f(aluresultmux_out)
 );
 
