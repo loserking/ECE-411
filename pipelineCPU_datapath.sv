@@ -2,6 +2,7 @@
 module pipelineCPU_datapath(
 	input clk,
 	input i_mem_resp,
+	input imem_rdata,
 	input lc3b_word dcache_rdata
 	
 );
@@ -49,6 +50,8 @@ module pipelineCPU_datapath(
 		logic ex_load_cc_and_out;
 		logic ex_load_reg_and_out;
 		logic ex_br_stall_and_out;
+		lc3b_word address_adder_out;
+		lc3b_word zextlshf1_out;
 	//EXECUTE-MEMORY STAGE INTERNAL SIGNALS//
 		lc3b_offset11 ex_mem_cs_out;
 		lc3b_word ex_mem_pc_out;
@@ -57,6 +60,7 @@ module pipelineCPU_datapath(
 		lc3b_word ex_mem_ir_out;
 		lc3b_reg ex_mem_dr_out;
 		lc3b_word ex_mem_address_out;
+		logic ex_mem_v_out;
 	//MEMORY STAGE INTERNAL SIGNALS//
 		lc3b_word Dcachesplitmux_out;
 		lc3b_word Dcachewritemux_out;
@@ -76,11 +80,23 @@ module pipelineCPU_datapath(
 		logic TRAPAND;
 		logic JSRAND;
 		logic TAKEBR;
+		lc3b_word mem_trap;
+		logic mem_stall;
+		lc3b_word HBzext_out;
+		lc3b_word LBzext_out;
+		lc3b_word bytefill_out;
 	//MEMORY-WRITEBACK INTERNAL SIGNALS//
-	
+		lc3b_reg mem_wb_dr_out;
+		lc3b_word mem_wb_address_out;
+		lc3b_word mem_wb_pc_out;
+		lc3b_word mem_wb_alu_result_out;
+		lc3b_word mem_wb_data_out;
+		logic mem_wb_v_out;
 	//WRITEBACK INTERNAL SIGNALS//
 		logic wb_load_cc_and_out;
 		logic wb_load_reg_and_out;
+		lc3b_word wb_regfile_data;
+		lc3b_reg wb_gencc_out;
 /*END INTERNAL SIGNALS*/
 
 
@@ -661,7 +677,7 @@ register mem_wb_address
 (
 	.clk,
 	.load(load_mem_wb),
-	.in(mem_address),
+	.in(ex_mem_address_out),
 	.out(mem_wb_address_out)
 
 );
