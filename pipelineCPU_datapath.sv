@@ -23,6 +23,7 @@ module pipelineCPU_datapath(
 		lc3b_word sr1_out;
 		lc3b_word sr2_out;
 		lc3b_reg cc_out;
+		logic dep_stall;
 	//DECODE-EXECUTE STAGE INTERNAL SIGNAL//
 		lc3b_word id_ex_pc_out;
 		lc3b_word id_ex_ir_out;
@@ -184,7 +185,24 @@ register #(.width(3)) cc
 //Still need dependency logic//
 //Still need branch stall logic//
 //Still need control store//
-
+dependencylogic dependencylogic
+(
+	.sr1_needed(), //NEED to bring in from the control store
+	.sr2_needed(), //NEED to bring in from the control store
+	.sr1(if_id_ir_out[8:6]),
+	.sr2(storemux_out),
+	.de_br_op(), //NEED to bring in from the control store
+	.ex_dr(id_ex_drid_out),
+	.mem_dr(ex_mem_dr_out),
+	.wb_dr(mem_wb_dr_out),
+	.v_ex_ld_reg(), //Need to get this from the execute stage
+	.v_mem_ld_reg(), //Need to get this from the memory stage
+	.v_wb_ld_reg(), //Need to get this from the writeback stage
+	.v_ex_ld_cc(), //Need to get this from the execute stage
+	.v_mem_ld_cc(), //Need to get this from the memory stage
+	.v_wb_ld_cc(), //Need to get this from the writeback stage
+	.dep_stall(dep_stall)
+);
 
 /*END DECODE STAGE COMPONENTS*/
 
