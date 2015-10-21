@@ -104,7 +104,7 @@ module pipelineCPU_datapath(
 /*FETCH STAGE COMPONENTS*/
 mux3 pcmux 
 (
-	.sel(pc_mux_sel), //Need to bring this from control rom
+	.sel(pc_mux_sel), //calculated by BR logic
 	.a(pc_plus2_out),
 	.b(mem_target), //From MEM_address in MEM STAGE
 	.c(mem_trap),//MEM_TRAP is the trap vector 
@@ -114,7 +114,7 @@ mux3 pcmux
 register pc
 (
 	.clk,
-	.load(load_pc),//NEED to bring this from control ROM
+	.load(load_pc),//Not from control rom. HAve to calculate it
 	.in(pcmux_out),
 	.out(pc_out)
 );
