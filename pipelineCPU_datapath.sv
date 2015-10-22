@@ -144,7 +144,7 @@ plus2 pc_plus2
 	.out(pc_plus2_out)
 );
 
-nor3input #(.width(1)) if_valid_nor
+nor3input if_valid_nor
 (
 	.a(),//ID.branch_stall
 	.b(mem_stall),//signal for memory not being ready
