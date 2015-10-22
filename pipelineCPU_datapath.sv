@@ -2,11 +2,21 @@
 import lc3b_types::*;
 module pipelineCPU_datapath(
 	input clk,
-	input i_mem_resp,
-	input imem_rdata,
-	input d_mem_resp,
-	input lc3b_word dcache_rdata
-	
+	input logic i_mem_resp,
+	input lc3b_word i_mem_rdata,
+	input logic d_mem_resp,
+	input lc3b_word d_mem_rdata,
+	output lc3b_word i_mem_address,
+	output lc3b_word i_mem_wdata,
+	output logic i_mem_read,
+	output logic i_mem_write,
+	output logic [1:0]i_mem_byte_enable,
+	output lc3b_word d_mem_address,
+	output lc3b_word d_mem_wdata,
+	output logic d_mem_read,
+	output logic d_mem_write,
+	output logic [1:0] d_mem_byte_enable
+
 );
 /*INTERNAL SIGNALS*/
 	//FETCH STAGE INTERNAL SIGNALS//
@@ -142,11 +152,11 @@ nor3input #(.width(1)) if_valid_nor
 	.f(nor_gate_out)
 );
 
-and2input #(.width(1)) if_valid_and
+and2input if_valid_and
 (
-	.a(i_mem_resp),
-	.b(nor_gate_out),
-	.f(load_if_id)
+	.x(i_mem_resp),
+	.y(nor_gate_out),
+	.z(load_if_id)
 );
 
 
@@ -165,7 +175,7 @@ register if_id_ir
 (
 	.clk,
 	.load(load_if_id),
-	.in(imem_rdata),
+	.in(i_mem_rdata),
 	.out(if_id_ir_out)
 );
 
@@ -182,7 +192,7 @@ register #(.width(1)) if_id_v
 /*DECODE STAGE COMPONENTS*/
 control_rom control_rom
 (
-	.opcode(if_id_ir_out[15:12]),
+	.opcode(lc3b_opcode'(if_id_ir_out[15:12])),
    .ir11(if_id_ir_out[11]),
    .ir5(if_id_ir_out[5]),
    .ctrl(control_store)
@@ -517,19 +527,19 @@ register #(.width(1)) ex_mem_v
 
 /*MEMORY STAGE COMPONENTS*/
 assign mem_target = ex_mem_address_out;
-assign mem_trap = dcache_rdata;
+assign mem_trap = d_mem_rdata;
 
 
 	/*Begin DCache Read Logic*/
 	zext #(.width(8)) HBzext
 	(
-		  .in(dcache_rdata[15:8]),
+		  .in(d_mem_rdata[15:8]),
 		 .out(HBzext_out)
 	);
 
 	zext #(.width(8)) LBzext
 	(
-		  .in(dcache_rdata[7:0]),
+		  .in(d_mem_rdata[7:0]),
 		 .out(LBzext_out)
 	);
 
@@ -544,7 +554,7 @@ assign mem_trap = dcache_rdata;
 	mux2 #(.width(16)) Dcachereadmux
 	(
 		 .sel(control_store.dcachereadmux_sel), //FROM control ROM(dcachereadmux_sel)
-		 .a(dcache_rdata), //Output from the D-Cache on read
+		 .a(d_mem_rdata), //Output from the D-Cache on read
 		 .b(Dcachesplitmux_out),
 		 .f(Dcachereadmux_out)
 	);
@@ -653,7 +663,7 @@ and2input mem_stall_andGate
 	cccomp cccomp
 	(
 		.a(ex_mem_cc),
-		.b(ex_mem_ir[11:9]),
+		.b(ex_mem_ir_out[11:9]),
 		.out(cccomp_out)
 	);
 	BR_box magic_box
@@ -710,7 +720,7 @@ register mem_wb_data
 (
 	.clk,
 	.load(load_mem_wb),
-	.in(Dcachemux_out),//Data from D-Cache
+	.in(Dcachereadmux_out),//Data from D-Cache
 	.out(mem_wb_data_out)
 );
 

@@ -1,7 +1,3 @@
-import lc3b_types::*;
-
-
-
 module
 nor3input #(parameter width = 16)
 (

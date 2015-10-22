@@ -12,33 +12,12 @@ module control_rom
 
 always_comb
 begin 
-/*
-lc3b_opcode opcode;
-	lc3b_aluop aluop;
-	logic addr1mux_sel;
-	logic addr2mux_sel;
-	logic addr3mux_sel;
-	logic sr1_needed;
-	logic sr2_needed;
-	logic br_op;
-	logic lshf1;
-	logic aluresultmux_sel;
-	logic sr2mux_sel;
-	logic dcacherw;
-	logic br_stall;
-	logic [1:0] wbmux_sel;
-	logic load_cc;
-	logic load_regfile;
-	logic storemux_sel;
-	logic destmux_sel;
-	logic dcachereadmux_sel;
-	logic dcachewritemux_sel;
-	*/
+
     /*Default value assignments --- make sure you do one for each signal or it will tell you to use blocking assignments*/
     ctrl.opcode = opcode;
 	 ctrl.aluop = alu_pass;
 	 ctrl.addr1mux_sel = 1'b0;
-	 ctrl.addr2mux_sel = 1'b0;
+	 ctrl.addr2mux_sel = 2'b00;
 	 ctrl.addr3mux_sel = 1'b0;
 	 ctrl.sr1_needed = 1'b0;
 	 ctrl.sr2_needed = 1'b0;
