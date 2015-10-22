@@ -70,7 +70,7 @@ module pipelineCPU_datapath(
 		lc3b_word address_adder_out;
 		lc3b_word zextlshf1_out;
 	//EXECUTE-MEMORY STAGE INTERNAL SIGNALS//
-		lc3b_offset11 ex_mem_cs_out;
+		lc3b_control_word ex_mem_cs_out;
 		lc3b_word ex_mem_pc_out;
 		lc3b_reg ex_mem_cc_out;					
 		lc3b_word ex_mem_alu_result_out;
@@ -112,6 +112,7 @@ module pipelineCPU_datapath(
 		lc3b_word mem_wb_data_out;
 		logic mem_wb_v_out;
 		logic load_mem_wb;
+		lc3b_control_word mem_wb_cs_out;
 	//WRITEBACK INTERNAL SIGNALS//
 		logic wb_load_cc_and_out;
 		logic wb_load_reg_and_out;
@@ -121,6 +122,12 @@ module pipelineCPU_datapath(
 
 
 /*FETCH STAGE COMPONENTS*/
+assign i_mem_address = pc_out;
+assign i_mem_write = 1'b0;
+assign i_mem_read = 1'b1;
+assign i_mem_wdata = 16'b0000000000000000;
+assign i_mem_byte_enable = 2'b11;
+
 mux3 pcmux 
 (
 	.sel(pc_mux_sel), //calculated by BR logic
@@ -233,21 +240,21 @@ register #(.width(3)) cc
 	.out(cc_out)
 );
 //Still need branch stall logic//
-//Still need control store//
+
 dependencylogic dependencylogic
 (
-	.sr1_needed(), //NEED to bring in from the control store
-	.sr2_needed(), //NEED to bring in from the control store
+	.sr1_needed(control_store.sr1_needed), //NEED to bring in from the control store
+	.sr2_needed(control_store.sr2_needed), //NEED to bring in from the control store
 	.sr1(if_id_ir_out[8:6]),
 	.sr2(storemux_out),
-	.de_br_op(), //NEED to bring in from the control store
+	.de_br_op(control_store.br_op), //NEED to bring in from the control store
 	.ex_dr(id_ex_drid_out),
 	.mem_dr(ex_mem_dr_out),
 	.wb_dr(mem_wb_dr_out),
-	.v_ex_ld_reg(), //Need to get this from the execute stage
+	.v_ex_ld_reg(ex_load_reg_and_out), //Need to get this from the execute stage
 	.v_mem_ld_reg(mem_load_reg_valid), //signal from mem that says mem loads register
 	.v_wb_ld_reg(wb_load_reg_and_out), //Signal from wb that says wb loads register
-	.v_ex_ld_cc(), //Need to get this from the execute stage
+	.v_ex_ld_cc(ex_load_cc_and_out), //Need to get this from the execute stage
 	.v_mem_ld_cc(mem_load_cc_valid), //Signal from mem that says mem loads cc register
 	.v_wb_ld_cc(wb_load_cc_and_out), //Signal from wb that says wb loads cc register
 	.dep_stall(dep_stall)
@@ -266,12 +273,12 @@ register id_ex_pc
 	.out(id_ex_pc_out)
 );
 
-register id_ex_cs
+csreg id_ex_cs
 (
 	.clk,
 	.load(load_id_ex),
-	.in(),//Need to take the output of the control store
-	.out()//id_ex_cs_out
+	.in(control_store),//Need to take the output of the control store
+	.out(id_ex_cs_out)//id_ex_cs_out
 );
 
 register id_ex_ir
@@ -352,7 +359,7 @@ sext #(.width(11)) sext11
 
 lshf1 lshf1
 (
-	.sel(),//NEED to get from CONTROL ROM
+	.sel(control_store.lshf1),//NEED to get from CONTROL ROM
 	.in(addr2mux_out),
 	.out(lshf1_out)
 );
@@ -366,7 +373,7 @@ sixteenbitadder address_adder
 
 mux2 addr3mux
 (
-	.sel(),//addr3mux_sel from control store
+	.sel(control_store.addr3mux_sel),//addr3mux_sel from control store
 	.a(address_adder_out), 
 	.b(zextlshf1_out),
 	.f(addr3mux_out)
@@ -380,7 +387,7 @@ zextlshf1 zextlshf1
 
 mux4 addr2mux
 (
-	.sel(), //addr2mux_sel from control store
+	.sel(control_store.addr2mux_sel), //addr2mux_sel from control store
 	.a(16'b0000000000000000),
 	.b(sext5_out),
 	.c(sext9_out),
@@ -390,7 +397,7 @@ mux4 addr2mux
 
 mux2 addr1mux
 (
-	.sel(),//addr1mux_sel from control store
+	.sel(control_store.addr1mux_sel),//addr1mux_sel from control store
 	.a(id_ex_pc_out),
 	.b(id_ex_sr1_out),
 	.f(addr1mux_out)
@@ -405,7 +412,7 @@ shft shft
 
 alu alu
 (
-	.aluop(),//Needs to come from Control Store
+	.aluop(control_store.aluop),//Needs to come from Control Store
    .a(id_ex_sr1_out),
 	.b(sr2mux_out),
    .f(alu_out)
@@ -413,7 +420,7 @@ alu alu
 
 mux2 aluresultmux
 (
-	.sel(),//Needs to come from Control Store
+	.sel(control_store.aluresultmux_sel),//Needs to come from Control Store
 	.a(alu_out),
 	.b(shft_out),
 	.f(aluresultmux_out)
@@ -421,7 +428,7 @@ mux2 aluresultmux
 
 mux2 sr2mux
 (
-	.sel(),//sr2mux_sel from control store
+	.sel(control_store.sr2mux_sel),//sr2mux_sel from control store
 	.a(id_ex_sr2_out),
 	.b(sext5_out),
 	.f(sr2mux_out)
@@ -430,21 +437,21 @@ mux2 sr2mux
 	/*Begin Execute dependency logic*/
 	and2input ex_load_cc_and
 	(
-		.x(), //Need to get load_cc from Control Store
+		.x(control_store.load_cc), //Need to get load_cc from Control Store
 		.y(id_ex_v_out),
 		.z(ex_load_cc_and_out)
 	);
 	
 	and2input ex_load_reg_and
 	(
-		.x(), //Need to get load_reg from control store
+		.x(control_store.load_regfile), //Need to get load_reg from control store
 		.y(id_ex_v_out),
 		.z(ex_load_reg_and_out)
 	);
 	
 	and2input ex_br_stall_and
 	(
-		.x(), //Need to get BR stall from control store
+		.x(control_store.br_stall), //Need to get BR stall from control store
 		.y(id_ex_v_out),
 		.z(ex_br_stall_and_out)
 	);
@@ -462,11 +469,11 @@ register ex_mem_address
 	.out(ex_mem_address_out)
 );
 
-register #(.width(11)) ex_mem_cs
+csreg ex_mem_cs
 (
 	.clk,
 	.load(load_ex_mem),
-	.in(), //input 11 bits from execute stage
+	.in(control_store), 
 	.out(ex_mem_cs_out)
 );
 
@@ -484,7 +491,7 @@ register #(.width(3)) ex_mem_cc
 (
 	.clk,
 	.load(load_ex_mem),
-	.in(),//input from ex is 3 bits
+	.in(id_ex_cc_out),
 	.out(ex_mem_cc_out)			
 );
 
@@ -528,6 +535,11 @@ register #(.width(1)) ex_mem_v
 /*MEMORY STAGE COMPONENTS*/
 assign mem_target = ex_mem_address_out;
 assign mem_trap = d_mem_rdata;
+assign d_mem_byte_enable = {and2_out,and1_out};
+assign d_mem_wdata = Dcachewritemux_out;
+assign d_mem_read = (!control_store.dcacherw);
+assign d_mem_write = control_store.dcacherw;
+assign d_mem_address = ex_mem_address_out;
 
 
 	/*Begin DCache Read Logic*/
@@ -553,7 +565,7 @@ assign mem_trap = d_mem_rdata;
 
 	mux2 #(.width(16)) Dcachereadmux
 	(
-		 .sel(control_store.dcachereadmux_sel), //FROM control ROM(dcachereadmux_sel)
+		 .sel(ex_mem_cs_out.dcachereadmux_sel), //FROM control ROM(dcachereadmux_sel)
 		 .a(d_mem_rdata), //Output from the D-Cache on read
 		 .b(Dcachesplitmux_out),
 		 .f(Dcachereadmux_out)
@@ -570,7 +582,7 @@ assign mem_trap = d_mem_rdata;
 
 	mux2 #(.width(16)) Dcachewritemux
 	(
-		 .sel(control_store.dcachewritemux_sel), //FROM control ROM(dcachewritemux_sel)
+		 .sel(ex_mem_cs_out.dcachewritemux_sel), //FROM control ROM(dcachewritemux_sel)
 		 .a(ex_mem_alu_result_out), 
 		 .b(bytefill_out),
 		 .f(Dcachewritemux_out)
@@ -581,14 +593,14 @@ assign mem_trap = d_mem_rdata;
     /*Begin DCache Write Enable Logic*/
     and2input and1
     (
-	    .x(), //D_CACHE_R/W control signal
+	    .x(ex_mem_cs_out.dcacherw), //D_CACHE_R/W control signal
 	    .y(!ex_mem_address_out[0]),
 	    .z(and1_out)
 
     );
     and2input and2
     (
-	    .x(), //D_CACHE_R/W control signal
+	    .x(ex_mem_cs_out.dcacherw), //D_CACHE_R/W control signal
 	    .y(ex_mem_address_out[0]),
 	    .z(and2_out)
 
@@ -596,7 +608,7 @@ assign mem_trap = d_mem_rdata;
 
     and2input and3
     (
-	    .x(), //D_CACHE_R/W control signal
+	    .x(control_store.dcacherw), //D_CACHE_R/W control signal
 	    .y(), //DATA_SIZE control signal
 	    .z(and3_out)
 
@@ -624,14 +636,14 @@ assign mem_trap = d_mem_rdata;
 	 
 and2input DCache_enable_andGate
 (
-	.x(control_store.dcache_enable), // from control rom dcache_enable
+	.x(ex_mem_cs_out.dcache_enable), // from control rom dcache_enable
 	.y(ex_mem_v),
 	.z(Dcache_enable_v)
 ); 
 
 and2input mem_stall_andGate
 (
-	.x(), //DCache_R signal from D cache
+	.x(ex_mem_cs_out.dcacherw), //DCache_R signal from D cache
 	.y(Dcache_enable_v),
 	.z(mem_stall)
 );
@@ -641,19 +653,19 @@ and2input mem_stall_andGate
 	/*Begin MEM_DEP_CHECK_LOGIC*/
 	and2input load_cc
 	(
-		.x(),//CS load CC signal
+		.x(ex_mem_cs_out.load_cc),//CS load CC signal
 		.y(ex_mem_v),
 		.z(mem_load_cc_valid)
 	);
 	and2input load_reg
 	(
-		.x(), //CS load REG signal
+		.x(ex_mem_cs_out.load_regfile), //CS load REG signal
 		.y(ex_mem_v),
 		.z(mem_load_reg_valid)
 	);
 	and2input br_stall
 	(
-		.x(), //CS BR STALL SIGNAL
+		.x(ex_mem_cs_out.br_stall), //CS BR STALL SIGNAL
 		.y(ex_mem_v),
 		.z(mem_br_stall_valid)
 	);
@@ -694,7 +706,7 @@ and2input mem_stall_andGate
 	and3input br_and3
 	(
 		.r(ex_mem_v),
-		.x(), //bring in BR_OP from CS
+		.x(ex_mem_cs_out.br_op), //bring in BR_OP from CS
 		.y(cccomp_out),
 		.z(TAKEBR)
 	
@@ -724,12 +736,12 @@ register mem_wb_data
 	.out(mem_wb_data_out)
 );
 
-register #(.width(4)) mem_wb_cs
+csreg mem_wb_cs
 (
 	.clk,
 	.load(load_mem_wb),
-	.in(), //cs from mem phase 4 bits
-	.out() //from control store
+	.in(ex_mem_cs_out), 
+	.out(mem_wb_cs_out) //from control store
 
 );
 
@@ -779,9 +791,9 @@ register #(.width(1)) mem_wb_v
 
 /*WRITE BACK STAGE COMPONENTS*/
 
- mux4 wb_mux
+ mux4 wbmux
  (
-	.sel(),//wb_mux_sel
+	.sel(mem_wb_cs_out.wbmux_sel),//wb_mux_sel
 	.a(mem_wb_address_out),
 	.b(mem_wb_data_out),
 	.c(mem_wb_pc_out),
@@ -799,14 +811,14 @@ register #(.width(1)) mem_wb_v
 	/*Begin WB stage ld_cc and ld_reg logic*/
 	and2input wb_load_cc_and
 	(
-		.x(),//Needs to be control store ld_cc bit
+		.x(mem_wb_cs_out.load_cc),//Needs to be control store ld_cc bit
 		.y(mem_wb_v_out),
 		.z(wb_load_cc_and_out)
 	);
 	
 	and2input wb_load_reg_and
 	(
-		.x(),//Needs to be the control store ld_reg bit
+		.x(mem_wb_cs_out.load_regfile),//Needs to be the control store ld_reg bit
 		.y(mem_wb_v_out),
 		.z(wb_load_reg_and_out)
 	);
