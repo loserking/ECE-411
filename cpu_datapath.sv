@@ -25,7 +25,7 @@ module cpu_datapath
 //Internal Signals
 
 	//Fetch Signals
-		logic pcmux_sel;
+		logic [1:0] pcmux_sel;
 		logic load_pc;
 		lc3b_word pc_plus2_out;
 		lc3b_word pc_out;
@@ -70,8 +70,11 @@ module cpu_datapath
 		lc3b_word ex_mem_pc_out;
 		lc3b_reg ex_mem_dest_out;
 		logic ex_mem_v_out;
+		lc3b_word ex_mem_aluresult_out;
 	//Memory signals
-	
+		lc3b_word mem_target;
+		logic cccomp_out;
+		logic br_taken;
 	//Memory-wb signals
 	
 	//wb signals
@@ -85,12 +88,14 @@ assign i_mem_address = pc_out;
 assign i_mem_wdata = 16'b0000000000000000;
 assign i_mem_read = 1'b1;
 assign i_mem_byte_enable = 2'b11;
+assign i_mem_write = 1'b0;
 
-mux2 pcmux
+mux3 pcmux
 (
 	.sel(pcmux_sel),
 	.a(pc_plus2_out),
-	.b(),
+	.b(mem_target),
+	.c(),
 	.f(pcmux_out)
 );
 
@@ -351,6 +356,14 @@ register ex_mem_pc
 );
 
 
+register ex_mem_aluresult
+(
+	.clk,
+	.load(load_ex_mem),
+	.in(alu_out),
+	.out(ex_mem_aluresult_out)
+);
+
 register #(.width(3)) ex_mem_dest
 (
 	.clk,
@@ -368,4 +381,33 @@ register #(.width(1)) ex_mem_v
 );
 
 //End Execute - Memory Pipe Components
+
+//Memory Stage Components
+assign mem_target = ex_mem_address_out;
+assign d_mem_byte_enable = 2'b11;
+assign d_mem_wdata = ex_mem_aluresult_out;
+assign d_mem_read = ex_mem_cs_out.dcacheR;
+assign d_mem_write = ex_mem_cs_out.dcacheW;
+assign d_mem_address = ex_mem_address_out;
+assign pcmux_sel = {1'b0,br_taken};
+
+cccomp cccomp
+(
+	.a(ex_mem_cc_out),
+	.b(ex_mem_ir_out[11:9]),
+	.out(cccomp_out)
+);
+
+and3input br_and
+(
+	.r(ex_mem_v_out),
+	.x(ex_mem_cs_out.br_op),
+	.y(cccomp_out),
+	.z(br_taken)
+);
+//End Memory Stage Components
+
+
+
+
 endmodule : cpu_datapath
