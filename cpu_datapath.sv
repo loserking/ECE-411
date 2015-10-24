@@ -42,6 +42,15 @@ module cpu_datapath
 		lc3b_reg cc_out;
 		lc3b_control_word control_store;
 	//Decode - Execute Signals
+		lc3b_word id_ex_pc_out;
+		lc3b_word id_ex_ir_out;
+		lc3b_word id_ex_sr1_out;
+		lc3b_word id_ex_sr2_out;
+		lc3b_reg id_ex_cc_out;
+		lc3b_reg id_ex_dest_out;
+		logic id_ex_v_out;
+		logic load_id_ex;
+		lc3b_control_word id_ex_cs_out;
 	//Execute signals
 	
 	//Execute-memory signals
@@ -146,7 +155,74 @@ register #(.width(3)) cc
 	.in(),  //From wb stage
 	.out(cc_out)
 );
+//End Decode Stage Components
 
+//Decode - Execute Pipe Components
+register id_ex_pc
+(
+	.clk,
+	.load(load_id_ex),
+	.in(if_id_pc_out),
+	.out(id_ex_pc_out)
+);
+
+csreg id_ex_cs
+(
+	.clk,
+	.load(load_id_ex),
+	.in(control_store),
+	.out(id_ex_cs_out)
+);
+
+register id_ex_sr1
+(
+	.clk,
+	.load(load_id_ex),
+	.in(sr1_out),
+	.out(id_ex_sr1_out)
+);
+
+register id_ex_sr2
+(
+	.clk,
+	.load(load_id_ex),
+	.in(sr2_out),
+	.out(id_ex_sr2_out)
+);
+
+register id_ex_ir
+(
+	.clk,
+	.load(load_id_ex),
+	.in(if_id_ir_out),
+	.out(id_ex_ir_out)
+);
+
+register #(.width(3)) id_ex_cc
+(
+	.clk,
+	.load(load_id_ex),
+	.in(cc_out),
+	.out(id_ex_cc_out)
+);
+
+register #(.width(3)) id_ex_dest
+(
+	.clk,
+	.load(load_id_ex),
+	.in(if_id_ir_out[11:9]),
+	.out(id_ex_dest_out)
+);
+
+register #(.width(1)) id_ex_v
+(
+	.clk,
+	.load(load_id_ex),
+	.in(load_id_ex),
+	.out(id_ex_v_out)
+);
+
+//End Decode - Execute pipe components
 
 
 endmodule : cpu_datapath
