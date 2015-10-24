@@ -52,7 +52,15 @@ module cpu_datapath
 		logic load_id_ex;
 		lc3b_control_word id_ex_cs_out;
 	//Execute signals
-	
+		lc3b_word sext5_out;
+		lc3b_word sext6_out;
+		lc3b_word sext9_out;
+		lc3b_word addr2mux_out;
+		lc3b_word lshf1_out;
+		lc3b_word addr1mux_out;
+		lc3b_word addressadder_out;
+		lc3b_word sr2mux_out;
+		lc3b_word alu_out;
 	//Execute-memory signals
 	//Memory signals
 	
@@ -224,5 +232,73 @@ register #(.width(1)) id_ex_v
 
 //End Decode - Execute pipe components
 
+//Execute Stage Components
+sext #(.width(6)) sext6
+(
+	.in(id_ex_ir_out[5:0]),
+	.out(sext6_out)
+);
+
+sext #(.width(9)) sext9
+(
+	.in(id_ex_ir_out[8:0]),
+	.out(sext9_out)
+);
+
+sext #(.width(5)) sext5
+(
+	.in(id_ex_ir_out[4:0]),
+	.out(sext5_out)
+);
+
+lshf1 lshf1
+(
+	.sel(id_ex_cs_out.lshf),
+	.in(addr2mux_out),
+	.out(lshf1_out)
+);
+
+mux2 addr1mux
+(
+	.sel(id_ex_cs_out.addr1mux_sel),
+	.a(id_ex_pc_out),
+	.b(id_ex_sr1_out),
+	.f(addr1mux_out)
+);
+
+mux4 addr2mux
+(
+	.sel(id_ex_cs_out.addr2mux_sel),
+	.a(16'b0000000000000000),
+	.b(sext6_out),
+	.c(sext9_out),
+	.d(),
+	.f(addr2mux_out)
+);
+
+sixteenbitadder addressadder
+(
+	.a(addr1mux_out),
+	.b(lshf1_out),
+	.out(addressadder_out)
+);
+
+mux2 sr2mux
+(
+	.sel(id_ex_cs_out.sr2mux_sel),
+	.a(id_ex_sr2_out),
+	.b(sext5_out),
+	.f(sr2mux_out)
+);
+
+alu alu
+(
+	.aluop(id_ex_cs_out.aluop),
+	.a(id_ex_sr1_out),
+	.b(sr2mux_out),
+	.f(alu_out)
+);
+
+//End Execute Stage components
 
 endmodule : cpu_datapath
