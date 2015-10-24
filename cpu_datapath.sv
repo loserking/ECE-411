@@ -100,13 +100,15 @@ assign i_mem_wdata = 16'b0000000000000000;
 assign i_mem_read = 1'b1;
 assign i_mem_byte_enable = 2'b11;
 assign i_mem_write = 1'b0;
+assign load_pc = i_mem_resp;
+assign load_if_id = i_mem_resp;
 
 mux3 pcmux
 (
 	.sel(pcmux_sel),
 	.a(pc_plus2_out),
 	.b(mem_target),
-	.c(),
+	.c(),  //Trap signal -- not needed for cp1
 	.f(pcmux_out)
 );
 
@@ -172,10 +174,11 @@ mux2 #(.width(3)) storemux
 regfile regfile
 (
 	.clk,
-	.in(), //From wb stage
+	.load(wb_load_reg),
+	.in(wbmux_out), //From wb stage
 	.src_a(if_id_ir_out[8:6]),
 	.src_b(storemux_out),
-	.dest(), //From wb stage
+	.dest(mem_wb_dest_out), //From wb stage
 	.reg_a(sr1_out),
 	.reg_b(sr2_out)
 );
@@ -183,13 +186,15 @@ regfile regfile
 register #(.width(3)) cc
 (
 	.clk,
-	.load(), //From Wb stage
-	.in(),  //From wb stage
+	.load(wb_load_cc), //From Wb stage
+	.in(wb_cc_data),  //From wb stage
 	.out(cc_out)
 );
 //End Decode Stage Components
 
 //Decode - Execute Pipe Components
+assign load_id_ex = 1'b1;
+
 register id_ex_pc
 (
 	.clk,
@@ -296,7 +301,7 @@ mux4 addr2mux
 	.a(16'b0000000000000000),
 	.b(sext6_out),
 	.c(sext9_out),
-	.d(),
+	.d(), // sext11 not needed for cp1
 	.f(addr2mux_out)
 );
 
@@ -326,6 +331,8 @@ alu alu
 //End Execute Stage components
 
 //Execute-Memory Pipe Components
+assign load_ex_mem = 1'b1;
+
 register ex_mem_address
 (
 	.clk,
@@ -416,6 +423,13 @@ and3input br_and
 	.y(cccomp_out),
 	.z(br_taken)
 );
+
+mem_wb_valid_logic mem_wb_valid_logic
+(
+	.opcode(ex_mem_cs_out.opcode),
+	.d_mem_resp(d_mem_resp),
+	.out(load_mem_wb)
+);
 //End Memory Stage Components
 
 //Memory - Write Back Pipe Components
@@ -489,9 +503,9 @@ register #(.width(1)) mem_wb_v
 mux4 wbmux
 (
 	.sel(mem_wb_cs_out.wbmux_sel),
-	.a(),
+	.a(), //mem_wb_address_out -- not needed for cp1
 	.b(mem_wb_data_out),
-	.c(),
+	.c(), // mem_wb_pc_out -- not needed for cp1
 	.d(mem_wb_aluresult_out),
 	.f(wbmux_out)
 );
