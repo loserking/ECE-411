@@ -86,7 +86,10 @@ module cpu_datapath
 		lc3b_reg mem_wb_dest_out;
 		logic mem_wb_v_out;
 	//wb signals
-	
+		lc3b_word wbmux_out;
+		lc3b_reg wb_cc_data;
+		logic wb_load_cc;
+		logic wb_load_reg;
 
 //End Internal Signals
 
@@ -479,7 +482,40 @@ register #(.width(1)) mem_wb_v
 	.in(load_mem_wb),
 	.out(mem_wb_v_out)
 );
+//End memory - writeback pipe components
 
+//Writeback Stage components
 
+mux4 wbmux
+(
+	.sel(mem_wb_cs_out.wbmux_sel),
+	.a(),
+	.b(mem_wb_data_out),
+	.c(),
+	.d(mem_wb_aluresult_out),
+	.f(wbmux_out)
+);
 
+gencc gencc
+(
+	.in(wbmux_out),
+	.out(wb_cc_data)
+);
+
+	//Writeback load cc and load reg logic
+	and2input wb_load_cc_and
+	(
+		.x(mem_wb_v_out),
+		.y(mem_wb_cs_out.load_cc),
+		.z(wb_load_cc)
+	);
+	
+	and2input wb_load_reg_and
+	(
+		.x(mem_wb_v_out),
+		.y(mem_wb_cs_out.load_reg),
+		.z(wb_load_reg)
+	);
+	//End writeback load cc and load reg logic
+//End Writeback stage components
 endmodule : cpu_datapath
