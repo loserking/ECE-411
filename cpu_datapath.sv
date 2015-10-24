@@ -31,7 +31,10 @@ module cpu_datapath
 		lc3b_word pc_out;
 		lc3b_word pcmux_out;
 	//Fetch-Decode Signals
-	
+		logic if_id_v_out;
+		logic load_if_id;
+		lc3b_word if_id_pc_out;
+		lc3b_word if_id_ir_out;
 	//Decode Signals
 	
 	//Decode - Execute Signals
@@ -78,6 +81,29 @@ register pc
 
 //End Fetch Stage Components
 
+//Fetch - Decode Pipe Components
+register if_id_pc
+(
+	.clk,
+	.load(load_if_id),
+	.in(pc_plus2_out),
+	.out(if_id_pc_out)
+);
 
+register if_id_ir
+(
+	.clk,
+	.load(load_if_id),
+	.in(i_mem_rdata),
+	.out(if_id_ir_out)
+);
+
+register #(.width(1)) if_id_v
+(
+	.clk,
+	.load(load_if_id),
+	.in(load_if_id),
+	.out(if_id_v_out)
+);
 
 endmodule : cpu_datapath
