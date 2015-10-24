@@ -50,25 +50,17 @@ typedef struct packed
 {
 	lc3b_opcode opcode;
 	lc3b_aluop aluop;
+	logic sr2mux_sel;
+	logic load_reg;
+	logic load_cc;
 	logic addr1mux_sel;
 	logic [1:0] addr2mux_sel;
-	logic addr3mux_sel;
-	logic sr1_needed;
-	logic sr2_needed;
-	logic br_op;
-	logic lshf1;
-	logic aluresultmux_sel;
-	logic sr2mux_sel;
-	logic dcacherw;
-	logic br_stall;
-	logic [1:0] wbmux_sel;
-	logic load_cc;
-	logic load_regfile;
+	logic lshf;
+	logic dcacheR;
 	logic storemux_sel;
-	logic destmux_sel;
-	logic dcachereadmux_sel;
-	logic dcachewritemux_sel;
-	logic dcache_enable;
+	logic dcacheW;
+	logic [1:0] wbmux_sel;
+	logic br_op;
 }lc3b_control_word;
 
 endpackage : lc3b_types

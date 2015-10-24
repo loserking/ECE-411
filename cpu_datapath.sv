@@ -36,7 +36,11 @@ module cpu_datapath
 		lc3b_word if_id_pc_out;
 		lc3b_word if_id_ir_out;
 	//Decode Signals
-	
+		lc3b_reg storemux_out;
+		lc3b_word sr1_out;
+		lc3b_word sr2_out;
+		lc3b_reg cc_out;
+		lc3b_control_word control_store;
 	//Decode - Execute Signals
 	//Execute signals
 	
@@ -105,5 +109,44 @@ register #(.width(1)) if_id_v
 	.in(load_if_id),
 	.out(if_id_v_out)
 );
+//End Fetch - Decode Pipe Components
+
+//Decode Stage Components
+control_rom control_rom
+(
+	.opcode(lc3b_opcode'(if_id_ir_out[15:12])),
+	.ir5(if_id_ir_out[5]),
+	.ir11(if_id_ir_out[11]),
+	.ctrl(control_store)
+);
+
+mux2 #(.width(3)) storemux
+(
+	.sel(control_store.storemux_sel),
+	.a(if_id_ir_out[2:0]),
+	.b(if_id_ir_out[11:9]),
+	.f(storemux_out)
+);
+
+regfile regfile
+(
+	.clk,
+	.in(), //From wb stage
+	.src_a(if_id_ir_out[8:6]),
+	.src_b(storemux_out),
+	.dest(), //From wb stage
+	.reg_a(sr1_out),
+	.reg_b(sr2_out)
+);
+
+register #(.width(3)) cc
+(
+	.clk,
+	.load(), //From Wb stage
+	.in(),  //From wb stage
+	.out(cc_out)
+);
+
+
 
 endmodule : cpu_datapath
