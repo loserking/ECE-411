@@ -62,6 +62,14 @@ module cpu_datapath
 		lc3b_word sr2mux_out;
 		lc3b_word alu_out;
 	//Execute-memory signals
+		logic load_ex_mem;
+		lc3b_word ex_mem_address_out;
+		lc3b_control_word ex_mem_cs_out;
+		lc3b_word ex_mem_ir_out;
+		lc3b_reg ex_mem_cc_out;
+		lc3b_word ex_mem_pc_out;
+		lc3b_reg ex_mem_dest_out;
+		logic ex_mem_v_out;
 	//Memory signals
 	
 	//Memory-wb signals
@@ -301,4 +309,63 @@ alu alu
 
 //End Execute Stage components
 
+//Execute-Memory Pipe Components
+register ex_mem_address
+(
+	.clk,
+	.load(load_ex_mem),
+	.in(addressadder_out),
+	.out(ex_mem_address_out)
+);
+
+csreg ex_mem_cs
+(
+	.clk,
+	.load(load_ex_mem),
+	.in(id_ex_cs_out),
+	.out(ex_mem_cs_out)
+);
+
+register ex_mem_ir
+(
+	.clk,
+	.load(load_ex_mem),
+	.in(id_ex_ir_out),
+	.out(ex_mem_ir_out)
+);
+
+register #(.width(3)) ex_mem_cc
+(
+	.clk,
+	.load(load_ex_mem),
+	.in(id_ex_cc_out),
+	.out(ex_mem_cc_out)
+);
+
+register ex_mem_pc
+(
+	.clk,
+	.load(load_ex_mem),
+	.in(id_ex_pc_out),
+	.out(ex_mem_pc_out)
+);
+
+
+register #(.width(3)) ex_mem_dest
+(
+	.clk,
+	.load(load_ex_mem),
+	.in(id_ex_dest_out),
+	.out(ex_mem_dest_out)
+);
+
+register #(.width(1)) ex_mem_v
+(
+	.clk,
+	.load(load_ex_mem),
+	.in(load_ex_mem),
+	.out(ex_mem_v_out)
+);
+
+//End Execute - Memory Pipe Components
 endmodule : cpu_datapath
