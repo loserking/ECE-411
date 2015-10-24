@@ -76,7 +76,15 @@ module cpu_datapath
 		logic cccomp_out;
 		logic br_taken;
 	//Memory-wb signals
-	
+		logic load_mem_wb;
+		lc3b_word mem_wb_address_out;
+		lc3b_word mem_wb_data_out;
+		lc3b_word mem_wb_pc_out;
+		lc3b_control_word mem_wb_cs_out;
+		lc3b_word mem_wb_aluresult_out;
+		lc3b_word mem_wb_ir_out;
+		lc3b_reg mem_wb_dest_out;
+		logic mem_wb_v_out;
 	//wb signals
 	
 
@@ -407,6 +415,70 @@ and3input br_and
 );
 //End Memory Stage Components
 
+//Memory - Write Back Pipe Components
+register mem_wb_address
+(
+	.clk,
+	.load(load_mem_wb),
+	.in(ex_mem_address_out),
+	.out(mem_wb_address_out)
+);
+
+register mem_wb_data
+(
+	.clk,
+	.load(load_mem_wb),
+	.in(d_mem_rdata),
+	.out(mem_wb_data_out)
+);
+
+csreg mem_wb_cs
+(
+	.clk,
+	.load(load_mem_wb),
+	.in(ex_mem_cs_out),
+	.out(mem_wb_cs_out)
+);
+
+register mem_wb_pc
+(
+	.clk,
+	.load(load_mem_wb),
+	.in(ex_mem_pc_out),
+	.out(mem_wb_pc_out)
+);
+
+register mem_wb_aluresult
+(
+	.clk,
+	.load(load_mem_wb),
+	.in(ex_mem_aluresult_out),
+	.out(mem_wb_aluresult_out)
+);
+
+register mem_wb_ir
+(
+	.clk,
+	.load(load_mem_wb),
+	.in(ex_mem_ir_out),
+	.out(mem_wb_ir_out)
+);
+
+register #(.width(3)) mem_wb_dest
+(
+	.clk,
+	.load(load_mem_wb),
+	.in(ex_mem_dest_out),
+	.out(mem_wb_dest_out)
+);
+
+register #(.width(1)) mem_wb_v
+(
+	.clk,
+	.load(load_mem_wb),
+	.in(load_mem_wb),
+	.out(mem_wb_v_out)
+);
 
 
 
