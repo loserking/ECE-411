@@ -36,7 +36,7 @@ begin
 				ctrl.load_reg = 1;
 				ctrl.load_cc = 1;
 				ctrl.wbmux_sel = 2'b11;
-				if(!ir5)
+				if(ir5)
 				begin
 					ctrl.sr2mux_sel = 1;
 				end
@@ -48,7 +48,7 @@ begin
 				ctrl.load_reg = 1;
 				ctrl.load_cc = 1;
 				ctrl.wbmux_sel = 2'b11;
-				if(!ir5)
+				if(ir5)
 				begin
 					ctrl.sr2mux_sel = 1;
 				end
