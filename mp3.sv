@@ -22,7 +22,7 @@ module mp3
 );
 
 /* Instantiate MP 3 top level blocks here */
-pipelineCPU_datapath cpu_datapath
+cpu_datapath cpu_datapath
 (
 	.clk,
 	.i_mem_address(i_mem_address),
