@@ -7,6 +7,7 @@ module control_rom
     input lc3b_opcode opcode,
     input logic ir11,
     input logic ir5,
+	 input lc3b_word pc,
     output lc3b_control_word ctrl
 );
 
@@ -15,7 +16,7 @@ begin
 
     /*Default value assignments --- make sure you do one for each signal or it will tell you to use blocking assignments*/
     ctrl.opcode = opcode;
-	 ctrl.aluop = alu_pass;
+	 ctrl.aluop = alu_passa;
 	 ctrl.addr1mux_sel = 1'b0;
 	 ctrl.addr2mux_sel = 2'b00;
 	 ctrl.br_op = 1'b0;
@@ -27,6 +28,7 @@ begin
     ctrl.load_cc = 1'b0;
     ctrl.load_reg = 1'b0;
     ctrl.storemux_sel = 1'b0;
+	 ctrl.pc = pc;
 
     /*Assign control signals based on opcode */
     case(opcode)
@@ -80,6 +82,7 @@ begin
 				ctrl.lshf = 1;
 				ctrl.storemux_sel = 1;
 				ctrl.dcacheW = 1;
+				ctrl.aluop = alu_passb;
 		  end
 		  
 		  op_br:

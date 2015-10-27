@@ -160,6 +160,7 @@ control_rom control_rom
 	.opcode(lc3b_opcode'(if_id_ir_out[15:12])),
 	.ir5(if_id_ir_out[5]),
 	.ir11(if_id_ir_out[11]),
+	.pc(if_id_pc_out),
 	.ctrl(control_store)
 );
 
