@@ -103,12 +103,13 @@ assign i_mem_write = 1'b0;
 assign load_pc = i_mem_resp;
 assign load_if_id = i_mem_resp;
 
-mux3 pcmux
+mux4 pcmux
 (
 	.sel(pcmux_sel),
 	.a(pc_plus2_out),
-	.b(mem_target),
-	.c(),  //Trap signal -- not needed for cp1
+	.b(mem_target),								//this works fine right now for LEA
+	.c(),  											//Trap signal -- not needed for cp1
+	.d(mem_target), 								//For LEA implementation PC + SEXT(PCoffset9 << 1)
 	.f(pcmux_out)
 );
 
@@ -504,7 +505,7 @@ register #(.width(1)) mem_wb_v
 mux4 wbmux
 (
 	.sel(mem_wb_cs_out.wbmux_sel),
-	.a(), //mem_wb_address_out -- not needed for cp1
+	.a(mem_wb_address_out), //mem_wb_address_out -- not needed for cp1
 	.b(mem_wb_data_out),
 	.c(), // mem_wb_pc_out -- not needed for cp1
 	.d(mem_wb_aluresult_out),

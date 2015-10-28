@@ -63,6 +63,7 @@ typedef struct packed
 	logic [1:0] wbmux_sel;
 	logic br_op;
 	lc3b_word pc;
+	
 }lc3b_control_word;
 
 endpackage : lc3b_types

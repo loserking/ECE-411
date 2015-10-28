@@ -29,6 +29,7 @@ begin
     ctrl.load_reg = 1'b0;
     ctrl.storemux_sel = 1'b0;
 	 ctrl.pc = pc;
+	 //ctrl.jmp = //jmp || br_op;
 
     /*Assign control signals based on opcode */
     case(opcode)
@@ -89,6 +90,15 @@ begin
 		  begin
 				ctrl.addr2mux_sel = 2'b10;
 				ctrl.lshf = 1;
+				ctrl.br_op = 1;
+		  end
+		  op_lea:
+		  begin
+				ctrl.addr2mux_sel = 2'b10;
+				ctrl.lshf = 1;
+				ctrl.storemux_sel = 1;
+				ctrl.load_cc = 1;
+				ctrl.load_reg = 1;
 				ctrl.br_op = 1;
 		  end
         /*all the other opcodes*/
