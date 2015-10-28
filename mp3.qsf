@@ -56,6 +56,15 @@ set_global_assignment -name EDA_TEST_BENCH_MODULE_NAME mp3_tb -section_id mp3_tb
 set_global_assignment -name EDA_TEST_BENCH_FILE magic_memory_dp.sv -section_id mp3_tb
 set_global_assignment -name EDA_TEST_BENCH_FILE mp3_tb.sv -section_id mp3_tb
 set_global_assignment -name EDA_TIME_SCALE "1 ps" -section_id eda_simulation
+set_global_assignment -name SYSTEMVERILOG_FILE mux8.sv
+set_global_assignment -name SYSTEMVERILOG_FILE or2input.sv
+set_global_assignment -name SYSTEMVERILOG_FILE array.sv
+set_global_assignment -name SYSTEMVERILOG_FILE tag_comp.sv
+set_global_assignment -name SYSTEMVERILOG_FILE l1cache.sv
+set_global_assignment -name SYSTEMVERILOG_FILE "sixteen-onetwentyeightconcat.sv"
+set_global_assignment -name SYSTEMVERILOG_FILE "eight-eightconcat.sv"
+set_global_assignment -name SYSTEMVERILOG_FILE l1cache_datapath.sv
+set_global_assignment -name SYSTEMVERILOG_FILE l1cache_control.sv
 set_global_assignment -name SYSTEMVERILOG_FILE mem_wb_valid_logic.sv
 set_global_assignment -name SYSTEMVERILOG_FILE gencc.sv
 set_global_assignment -name SYSTEMVERILOG_FILE and2input.sv
