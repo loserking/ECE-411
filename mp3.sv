@@ -3,13 +3,13 @@ import lc3b_types::*;
 module mp3
 (
     input clk,
-	 input logic pmem_resp,
-	 input lc3b_word pmem_rdata,
-	 output logic pmem_read,
-	 output logic pmem_write,
+	 input logic l2_mem_resp,
+	 input lc3b_word l2_mem_rdata,
+	 output logic arbiter_mem_read,
+	 output logic arbiter_mem_write,
 	 output logic [1:0] pmem_byte_enable,
-	 output lc3b_word pmem_wdata,
-	 output lc3b_word pmem_address
+	 output lc3b_word arbiter_mem_wdata,
+	 output lc3b_word arbiter_mem_address
 	 
 );
 /*Begin internal signals*/
@@ -45,6 +45,11 @@ module mp3
 		logic [1:0] d_pmem_byte_enable;
 		cache_line d_pmem_rdata;
 		logic d_pmem_resp;
+	/*Arbiter Interal Signals*/
+		cache_line arbiter_i_mem_rdata;
+		cache_line arbiter_d_mem_rdata;
+		logic arbiter_i_mem_resp;
+		logic arbiter_d_mem_resp;
 /*End Internal Signals*/
 /*Begin CPU datapath components */
 cpu_datapath cpu_datapath
@@ -71,7 +76,7 @@ cpu_datapath cpu_datapath
 
 l1cache l1icache
 (
-    /*Signals from CPU*/
+
     .clk,
     .mem_address(i_mem_address),
 	 .mem_write(i_mem_write),
@@ -80,9 +85,9 @@ l1cache l1icache
 	 .mem_read(i_mem_read),
 	 
      
-     /* Datapath controls */
-    .pmem_rdata(i_pmem_rdata),
-	 .pmem_resp(i_pmem_resp),
+ 
+    .pmem_rdata(arbiter_i_mem_rdata),
+	 .pmem_resp(arbiter_i_mem_resp),
 
 	 .mem_rdata(i_mem_rdata),
 	 .mem_resp(i_mem_resp),
@@ -97,7 +102,7 @@ l1cache l1icache
 /*Begin L1 D-Cache Components*/
 l1cache l1dcache
 (
-    /*Signals from CPU*/
+
     .clk,
     .mem_address(d_mem_address),
 	 .mem_write(d_mem_write),
@@ -106,9 +111,9 @@ l1cache l1dcache
 	 .mem_read(d_mem_read),
 	 
      
-     /* Datapath controls */
-    .pmem_rdata(d_pmem_rdata),
-	 .pmem_resp(d_pmem_resp),
+
+    .pmem_rdata(arbiter_d_mem_rdata),
+	 .pmem_resp(arbiter_d_mem_resp),
 
 	 .mem_rdata(d_mem_rdata),
 	 .mem_resp(d_mem_resp),
@@ -118,5 +123,31 @@ l1cache l1dcache
 	 .pmem_wdata(d_pmem_wdata)
 );
 /*End L1 D-Cache Components*/
+
+/*Begin Arbiter Components*/
+arbiter arbiter
+(
+	 .clk,
+    .i_mem_read(i_pmem_read),
+	 .i_mem_write(i_pmem_write),
+	 .i_mem_address(i_pmem_address),
+	 .i_mem_wdata(i_pmem_wdata),
+	 .d_mem_read(d_mem_read),
+	 .d_mem_write(d_mem_read),
+	 .d_mem_address(d_mem_address),
+	 .d_mem_wdata(d_mem_wdata), 
+	 .l2_mem_rdata(l2_mem_rdata),
+	 .l2_mem_resp(l2_mem_resp),
+	 .arbiter_i_mem_resp(arbiter_i_mem_resp),
+	 .arbiter_d_mem_resp(arbiter_d_mem_resp),
+	 
+	 .arbiter_mem_wdata(arbiter_mem_wdata),
+	 .arbiter_mem_write(arbiter_mem_write),
+	 .arbiter_mem_read(arbiter_mem_read),
+	 .arbiter_mem_address(arbiter_mem_address),
+	 .arbiter_d_mem_rdata(arbiter_d_mem_rdata),
+	 .arbiter_i_mem_rdata(arbiter_i_mem_rdata)
+);
+/*End Arbiter Components*/
 
 endmodule : mp3
