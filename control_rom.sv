@@ -101,6 +101,14 @@ begin
 				ctrl.load_reg = 1;
 				ctrl.br_op = 1;
 		  end
+		  op_jmp:										/*same as RET*/
+		  begin
+				ctrl.load_reg = 1;
+				//send sr1 out into alu default op is passa
+				//set wb mux sel to 11
+				//OR just send it up into target pc and send that into the pc mux
+				
+		  end
         /*all the other opcodes*/
         
         default: 
