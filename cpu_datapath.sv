@@ -51,6 +51,7 @@ module cpu_datapath
 		logic id_ex_v_out;
 		logic load_id_ex;
 		lc3b_control_word id_ex_cs_out;
+		lc3b_reg dest_mux_out;
 	//Execute signals
 		lc3b_word sext5_out;
 		lc3b_word sext6_out;
@@ -192,6 +193,16 @@ register #(.width(3)) cc
 	.in(wb_cc_data),  //From wb stage
 	.out(cc_out)
 );
+
+
+
+mux2 dest_mux
+(
+	.sel(control_store.dest_mux_sel),
+	.a(if_id_ir_out[11:9]),
+	.b(3'b111), //hardcode 111
+	.f(dest_mux_out),
+);
 //End Decode Stage Components
 
 //Decode - Execute Pipe Components
@@ -249,7 +260,7 @@ register #(.width(3)) id_ex_dest
 (
 	.clk,
 	.load(load_id_ex),
-	.in(if_id_ir_out[11:9]),
+	.in(dest_mux_out),
 	.out(id_ex_dest_out)
 );
 

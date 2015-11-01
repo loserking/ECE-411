@@ -29,6 +29,7 @@ begin
     ctrl.load_reg = 1'b0;
     ctrl.storemux_sel = 1'b0;
 	 ctrl.pc = pc;
+	 ctrl.dest_mux_sel = 1'b0;
 	 //ctrl.jmp = //jmp || br_op;
 
     /*Assign control signals based on opcode */
@@ -107,8 +108,25 @@ begin
 				//send sr1 out into alu default op is passa
 				//sends sr1out to target pc
 				//default values carry us a long way here
-				
 		  end
+		  
+		  op_jsr:
+		  begin
+				ctrl.dest_mux_sel = 1;
+				ctrl.load_reg = 1;
+				
+				if(ir11)//jsr
+					begin
+					ctrl.addr2mux_sel = 2'b11;
+					ctrl.lshf = 1;
+					//defaults carry us the rest of the way
+					end
+		  end
+		  
+		  
+		  
+		  
+		  
         /*all the other opcodes*/
         
         default: 
