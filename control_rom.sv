@@ -105,8 +105,8 @@ begin
 		  begin
 				ctrl.load_reg = 1;
 				//send sr1 out into alu default op is passa
-				//set wb mux sel to 11
-				//OR just send it up into target pc and send that into the pc mux
+				//sends sr1out to target pc
+				//default values carry us a long way here
 				
 		  end
         /*all the other opcodes*/
