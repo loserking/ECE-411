@@ -5,20 +5,14 @@ timeprecision 1ns;
 
 logic clk;
 
-logic i_mem_resp;
-logic i_mem_read;
-logic i_mem_write;
-logic [1:0] i_mem_byte_enable;
-logic [15:0] i_mem_address;
-logic [15:0] i_mem_rdata;
-logic [15:0] i_mem_wdata;
-logic d_mem_resp;
-logic d_mem_read;
-logic d_mem_write;
-logic [1:0] d_mem_byte_enable;
-logic [15:0] d_mem_address;
-logic [15:0] d_mem_rdata;
-logic [15:0] d_mem_wdata;
+
+logic arbiter_mem_read;
+logic arbiter_mem_write;
+logic [15:0] arbiter_mem_address;
+logic [1:0] pmem_byte_enable;
+logic [127:0] arbiter_mem_wdata;
+logic l2_mem_resp;
+logic [127:0] l2_mem_rdata;
 
 
 /* Clock generator */
@@ -27,46 +21,25 @@ always #5 clk = ~clk;
 
 mp3 dut
 (
-	.clk,
-	.i_mem_read(i_mem_read),
-	.i_mem_write(i_mem_write),
-	.i_mem_byte_enable(i_mem_byte_enable),
-	.i_mem_address(i_mem_address),
-	.i_mem_rdata(i_mem_rdata),
-	.i_mem_wdata(i_mem_wdata),
-	.i_mem_resp(i_mem_resp),
-	.d_mem_read(d_mem_read),
-	.d_mem_write(d_mem_write),
-	.d_mem_byte_enable(d_mem_byte_enable),
-	.d_mem_address(d_mem_address),
-	.d_mem_rdata(d_mem_rdata),
-	.d_mem_wdata(d_mem_wdata),
-	.d_mem_resp(d_mem_resp)
+	 .clk,
+	 .l2_mem_resp(l2_mem_resp),
+	 .l2_mem_rdata(l2_mem_rdata),
+	 .arbiter_mem_read(arbiter_mem_read),
+	 .arbiter_mem_write(arbiter_mem_write),
+	 .pmem_byte_enable(pmem_byte_enable),
+	 .arbiter_mem_wdata(arbiter_mem_wdata),
+	 .arbiter_mem_address(arbiter_mem_address)
 );
 
-
-magic_memory_dp magic_memory_dp
+physical_memory pmem
 (
-	.clk,
-
-    /* Port A */
-    .read_a(i_mem_read),
-    .write_a(i_mem_write),
-    .wmask_a(i_mem_byte_enable),
-    .address_a(i_mem_address),
-    .wdata_a(i_mem_wdata),
-    .resp_a(i_mem_resp),
-    .rdata_a(i_mem_rdata),
-
-    /* Port B */
-    .read_b(d_mem_read),
-    .write_b(d_mem_write),
-    .wmask_b(d_mem_byte_enable),
-    .address_b(d_mem_address),
-    .wdata_b(d_mem_wdata),
-    .resp_b(d_mem_resp),
-    .rdata_b(d_mem_rdata)
-
+	 .clk,
+    .read(arbiter_mem_read),
+    .write(arbiter_mem_write),
+    .address(arbiter_mem_address),
+    .wdata(arbiter_mem_wdata),
+    .resp(l2_mem_resp),
+    .rdata(l2_mem_rdata)
 );
 
 endmodule : mp3_tb

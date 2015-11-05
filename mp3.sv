@@ -4,11 +4,11 @@ module mp3
 (
     input clk,
 	 input logic l2_mem_resp,
-	 input lc3b_word l2_mem_rdata,
+	 input cache_line l2_mem_rdata,
 	 output logic arbiter_mem_read,
 	 output logic arbiter_mem_write,
 	 output logic [1:0] pmem_byte_enable,
-	 output lc3b_word arbiter_mem_wdata,
+	 output cache_line arbiter_mem_wdata,
 	 output lc3b_word arbiter_mem_address
 	 
 );
@@ -132,10 +132,10 @@ arbiter arbiter
 	 .i_mem_write(i_pmem_write),
 	 .i_mem_address(i_pmem_address),
 	 .i_mem_wdata(i_pmem_wdata),
-	 .d_mem_read(d_mem_read),
-	 .d_mem_write(d_mem_read),
-	 .d_mem_address(d_mem_address),
-	 .d_mem_wdata(d_mem_wdata), 
+	 .d_mem_read(d_pmem_read),
+	 .d_mem_write(d_pmem_read),
+	 .d_mem_address(d_pmem_address),
+	 .d_mem_wdata(d_pmem_wdata), 
 	 .l2_mem_rdata(l2_mem_rdata),
 	 .l2_mem_resp(l2_mem_resp),
 	 .arbiter_i_mem_resp(arbiter_i_mem_resp),

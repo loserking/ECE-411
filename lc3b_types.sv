@@ -62,6 +62,7 @@ typedef struct packed
 	logic dcacheW;
 	logic [1:0] wbmux_sel;
 	logic br_op;
+	logic dcache_enable;
 	lc3b_word pc;
 }lc3b_control_word;
 

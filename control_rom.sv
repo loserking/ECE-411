@@ -29,6 +29,7 @@ begin
     ctrl.load_reg = 1'b0;
     ctrl.storemux_sel = 1'b0;
 	 ctrl.pc = pc;
+	 ctrl.dcache_enable = 1'b0;
 
     /*Assign control signals based on opcode */
     case(opcode)
@@ -73,6 +74,7 @@ begin
 				ctrl.load_cc = 1;
 				ctrl.lshf = 1;
 				ctrl.dcacheR = 1;
+				ctrl.dcache_enable = 1'b1;
 		  end
 		  
 		  op_str:
@@ -83,6 +85,7 @@ begin
 				ctrl.storemux_sel = 1;
 				ctrl.dcacheW = 1;
 				ctrl.aluop = alu_passb;
+				ctrl.dcache_enable = 1'b1;
 		  end
 		  
 		  op_br:

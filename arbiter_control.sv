@@ -1,8 +1,6 @@
 /*Control logic for the arbiter*/
-/* The cache controller - contains the state machine for the cache */
+/*the arbiter controller*/
 
-/* cpu control contains the state machine for the cpu */
-import lc3b_types::*; /* Import types defined in lc3b_types.sv */
 
 module arbiter_control
 (
