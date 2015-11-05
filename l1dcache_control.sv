@@ -3,7 +3,7 @@
 /* cpu control contains the state machine for the cpu */
 import lc3b_types::*; /* Import types defined in lc3b_types.sv */
 
-module cache_control
+module dcache_control
 (
     /* Input and output port declarations */
     input clk,
@@ -210,4 +210,4 @@ begin: next_state_assignment
      end
 end
 
-endmodule : cache_control
+endmodule : dcache_control

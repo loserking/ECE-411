@@ -1,7 +1,7 @@
 /* cache design top level -- contains the cache controller and the cache datapath */
 import lc3b_types::*;
 
-module l1cache
+module l1icache
 (
     input clk,
 	 input cache_line pmem_rdata,
@@ -49,7 +49,7 @@ logic dirty1_in;
 logic pmemmux_sel;
 
 
-cache_control cache_control
+icache_control icache_control
 (
 	 .clk,
     .mem_address(mem_address),
@@ -121,5 +121,5 @@ cache_datapath  cache_datapath
 );
 
 
-endmodule : l1cache
+endmodule : l1icache
 

@@ -74,7 +74,7 @@ cpu_datapath cpu_datapath
 
 /*Begin L1 I-Cache Components*/
 
-l1cache l1icache
+l1icache l1icache
 (
 
     .clk,
@@ -100,7 +100,7 @@ l1cache l1icache
 /*End L1 I-Cache Components*/
 
 /*Begin L1 D-Cache Components*/
-l1cache l1dcache
+l1dcache l1dcache
 (
 
     .clk,
