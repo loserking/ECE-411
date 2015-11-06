@@ -29,6 +29,7 @@ module mp3
 		logic [1:0] d_mem_byte_enable;
 		lc3b_word d_mem_rdata;
 		logic d_mem_resp;
+		logic dcache_enable;
 	/*L1 I cache internal signals*/
 		lc3b_word i_pmem_address;
 		cache_line i_pmem_wdata;
@@ -68,6 +69,7 @@ cpu_datapath cpu_datapath
 	.d_mem_write(d_mem_write),
 	.d_mem_byte_enable(d_mem_byte_enable),
 	.d_mem_rdata(d_mem_rdata),
+	.dcache_enable(dcache_enable),
 	.d_mem_resp(d_mem_resp)
 );
 /*End CPU datapath components*/
@@ -109,6 +111,7 @@ l1dcache l1dcache
 	 .mem_wdata(d_mem_wdata),
 	 .mem_byte_enable(d_mem_byte_enable),
 	 .mem_read(d_mem_read),
+	 .dcache_enable(),
 	 
      
 

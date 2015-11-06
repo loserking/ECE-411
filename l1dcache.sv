@@ -11,6 +11,7 @@ module l1dcache
 	 input lc3b_word mem_wdata,
 	 input mem_read,
     input mem_write,
+	 input dcache_enable,
 
 
     /* Memory signals */
@@ -61,6 +62,7 @@ dcache_control dcache_control
 	 .lru_in(lru_in),
 	 .way0and_out(way0and_out),
 	 .lru_write(lru_write),
+	 .dcache_enable(dcache_enable),
 	 
      
      /* Datapath controls */

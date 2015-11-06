@@ -17,6 +17,7 @@ module cpu_datapath
 	output lc3b_word d_mem_wdata,
 	output logic d_mem_read,
 	output logic d_mem_write,
+	output logic dcache_enable,
 	output logic [1:0] d_mem_byte_enable
 
 );
@@ -408,6 +409,7 @@ assign d_mem_wdata = ex_mem_aluresult_out;
 assign d_mem_read = ex_mem_cs_out.dcacheR;
 assign d_mem_write = ex_mem_cs_out.dcacheW;
 assign d_mem_address = ex_mem_address_out;
+assign dcache_enable = ex_mem_cs_out.dcache_enable & ex_mem_v_out;
 assign pcmux_sel = {1'b0,br_taken};
 
 cccomp cccomp

@@ -14,6 +14,7 @@ module dcache_control
 	 input lc3b_word mem_wdata,
 	 input logic lru_out,
 	 input logic way0and_out,
+	 input logic dcache_enable,
 	 
      
      /* Datapath controls */
@@ -176,11 +177,11 @@ begin : next_state_logic
 
      case(state)
          s_idle:
-				if(mem_read && hit)
+				if(mem_read && hit && dcache_enable)
 					next_state = s_idle;
-				else if(!hit && !dirtymux_out)
+				else if(!hit && !dirtymux_out && dcache_enable)
 					next_state = s_allocate;
-				else if(!hit && dirtymux_out)
+				else if(!hit && dirtymux_out && dcache_enable)
 					next_state = s_write_back;
 			s_update_cache:
 				next_state = s_pmem_complete;
