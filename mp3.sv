@@ -111,7 +111,7 @@ l1dcache l1dcache
 	 .mem_wdata(d_mem_wdata),
 	 .mem_byte_enable(d_mem_byte_enable),
 	 .mem_read(d_mem_read),
-	 .dcache_enable(),
+	 .dcache_enable(dcache_enable),
 	 
      
 

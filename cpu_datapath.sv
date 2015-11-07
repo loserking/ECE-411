@@ -51,6 +51,7 @@ module cpu_datapath
 		lc3b_reg id_ex_dest_out;
 		logic id_ex_v_out;
 		logic load_id_ex;
+		logic id_ex_v_logic_out;
 		lc3b_control_word id_ex_cs_out;
 	//Execute signals
 		lc3b_word sext5_out;
@@ -134,7 +135,7 @@ register if_id_pc
 (
 	.clk,
 	.load(load_if_id),
-	.in(pc_plus2_out),
+	.in(pc_out),
 	.out(if_id_pc_out)
 );
 
@@ -192,10 +193,18 @@ register #(.width(3)) cc
 	.in(wb_cc_data),  //From wb stage
 	.out(cc_out)
 );
+
 //End Decode Stage Components
 
 //Decode - Execute Pipe Components
-assign load_id_ex = 1'b1;
+assign load_id_ex = id_ex_v_logic_out;
+
+id_ex_v_logic id_ex_v_logic
+(
+	.clk,
+	.i_mem_resp(i_mem_resp),
+	.out(id_ex_v_logic_out)
+);
 
 register id_ex_pc
 (
@@ -257,7 +266,7 @@ register #(.width(1)) id_ex_v
 (
 	.clk,
 	.load(load_id_ex),
-	.in(load_id_ex),
+	.in(id_ex_v_logic_out),
 	.out(id_ex_v_out)
 );
 
