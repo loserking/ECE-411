@@ -146,7 +146,11 @@ begin
 				ctrl.load_reg = 1;
 				ctrl.trap_op = 1;
 				ctrl.wbmux_sel = 2'b10;
+				//then zext+lsfht
 				ctrl.addr3mux_sel = 1;
+				ctrl.dcacheR = 1;
+				
+				//pc_mux_sel gets 2'b10 and  sends mem_trap in the PC
 		  end
 		  
 		  

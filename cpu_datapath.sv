@@ -78,6 +78,7 @@ module cpu_datapath
 		lc3b_word ex_mem_aluresult_out;
 	//Memory signals
 		lc3b_word mem_target;
+		lc3b_word mem_trap;
 		logic cccomp_out;
 		logic br_taken;
 		logic jsr_taken;
@@ -357,7 +358,7 @@ alu alu
 
 zextlshf1 zextlshf
 (
-	.in(id_ex_ir[7:0]),
+	.in(id_ex_ir_out[7:0]),
 	.out(zextlshf_out)
 
 );
@@ -445,6 +446,7 @@ register #(.width(1)) ex_mem_v
 
 //Memory Stage Components
 assign mem_target = ex_mem_address_out;
+assign mem_trap = d_mem_rdata;
 assign d_mem_byte_enable = 2'b11;
 assign d_mem_wdata = ex_mem_aluresult_out;
 assign d_mem_read = ex_mem_cs_out.dcacheR;
