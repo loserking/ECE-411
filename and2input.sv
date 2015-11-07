@@ -1,8 +1,8 @@
 /*calculates and*/
 
 module and2input(
-		input wire x, y,
-		output wire z
+		input logic x, y,
+		output logic z
 		
 );
 

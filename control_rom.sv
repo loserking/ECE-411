@@ -19,7 +19,12 @@ begin
 	 ctrl.aluop = alu_passa;
 	 ctrl.addr1mux_sel = 1'b0;
 	 ctrl.addr2mux_sel = 2'b00;
+	 ctrl.addr3mux_sel = 1'b0;
 	 ctrl.br_op = 1'b0;
+	 ctrl.jsr_op = 1'b0;
+	 ctrl.trap_op = 1'b0;
+	 ctrl.uncond_op = 1'b0;
+	 ctrl.jmp_op = 1'b0;
 	 ctrl.lshf = 1'b0;
 	 ctrl.sr2mux_sel = 1'b0;
 	 ctrl.dcacheR = 1'b0;
@@ -104,26 +109,45 @@ begin
 		  end
 		  op_jmp:										/*same as RET*/
 		  begin
+				//all we need to do is pass sr1_out from the regfile into the pc
 				ctrl.load_reg = 1;
-				//send sr1 out into alu default op is passa
-				//sends sr1out to target pc
-				//default values carry us a long way here
+				ctrl.jmp_op = 1;
+				
 		  end
 		  
 		  op_jsr:
 		  begin
 				ctrl.dest_mux_sel = 1;
 				ctrl.load_reg = 1;
+				ctrl.jsr_op = 1;
 				
-				if(ir11)//jsr
+				//then this goes into mem address and we send target pc to the pc
+				if(ir11 == 0)
 					begin
+					//JSRR is just a jump
+					ctrl.jmp_op = 1;
+					//first, make R7 hold the incremented PC value
+					ctrl.wbmux_sel = 2'b10;
+					end
+				if(ir11 == 1)//jsr
+					begin
+					ctrl.br_op = 1;
 					ctrl.addr2mux_sel = 2'b11;
 					ctrl.lshf = 1;
-					//defaults carry us the rest of the way
+					//first, make R7 hold the incremented PC value
+					ctrl.wbmux_sel = 2'b10;
 					end
 		  end
 		  
-		  
+		  op_trap:
+		  begin
+				//put the incremented pc into R7
+				ctrl.dest_mux_sel = 1;
+				ctrl.load_reg = 1;
+				ctrl.trap_op = 1;
+				ctrl.wbmux_sel = 2'b10;
+				ctrl.addr3mux_sel = 1;
+		  end
 		  
 		  
 		  

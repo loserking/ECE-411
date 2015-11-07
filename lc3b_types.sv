@@ -56,12 +56,17 @@ typedef struct packed
 	logic load_cc;
 	logic addr1mux_sel;
 	logic [1:0] addr2mux_sel;
+	logic addr3mux_sel;
 	logic lshf;
 	logic dcacheR;
 	logic storemux_sel;
 	logic dcacheW;
 	logic [1:0] wbmux_sel;
 	logic br_op;
+	logic jsr_op;
+	logic trap_op;
+	logic uncond_op;
+	logic jmp_op;
 	lc3b_word pc;
 	logic dest_mux_sel;
 	
