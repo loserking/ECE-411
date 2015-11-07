@@ -1,0 +1,1 @@
+simulation/modelsim/wave.do

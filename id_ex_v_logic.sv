@@ -3,6 +3,8 @@ module id_ex_v_logic
 (
 	input logic clk,
 	input logic i_mem_resp,
+	input logic dcache_stall,
+	input logic br_taken,
 	output logic out
 );
 
@@ -25,8 +27,12 @@ end
 
 always_comb
 begin
-    if((data == (2'b11)) ||(data == (2'b10)))
+    if((data == (2'b11)) || (data == (2'b10)))
 		out = 1;
+	 else if(dcache_stall == 1)
+		out = 0;
+	 else if(br_taken)
+		out = 0;
 	 else 
 		out = 0;
 end

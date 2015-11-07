@@ -46,6 +46,7 @@ module mp3
 		logic [1:0] d_pmem_byte_enable;
 		cache_line d_pmem_rdata;
 		logic d_pmem_resp;
+		logic dcache_hit;
 	/*Arbiter Interal Signals*/
 		cache_line arbiter_i_mem_rdata;
 		cache_line arbiter_d_mem_rdata;
@@ -70,7 +71,8 @@ cpu_datapath cpu_datapath
 	.d_mem_byte_enable(d_mem_byte_enable),
 	.d_mem_rdata(d_mem_rdata),
 	.dcache_enable(dcache_enable),
-	.d_mem_resp(d_mem_resp)
+	.d_mem_resp(d_mem_resp),
+	.dcache_hit(dcache_hit)
 );
 /*End CPU datapath components*/
 
@@ -119,6 +121,7 @@ l1dcache l1dcache
 	 .pmem_resp(arbiter_d_mem_resp),
 
 	 .mem_rdata(d_mem_rdata),
+	 .hit(dcache_hit),
 	 .mem_resp(d_mem_resp),
     .pmem_read(d_pmem_read),
     .pmem_write(d_pmem_write),
@@ -136,7 +139,7 @@ arbiter arbiter
 	 .i_mem_address(i_pmem_address),
 	 .i_mem_wdata(i_pmem_wdata),
 	 .d_mem_read(d_pmem_read),
-	 .d_mem_write(d_pmem_read),
+	 .d_mem_write(d_pmem_write),
 	 .d_mem_address(d_pmem_address),
 	 .d_mem_wdata(d_pmem_wdata), 
 	 .l2_mem_rdata(l2_mem_rdata),

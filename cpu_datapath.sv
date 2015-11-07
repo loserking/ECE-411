@@ -8,6 +8,7 @@ module cpu_datapath
 	input lc3b_word i_mem_rdata,
 	input logic d_mem_resp,
 	input lc3b_word d_mem_rdata,
+	input logic dcache_hit,
 	output lc3b_word i_mem_address,
 	output lc3b_word i_mem_wdata,
 	output logic i_mem_read,
@@ -77,6 +78,7 @@ module cpu_datapath
 		lc3b_word mem_target;
 		logic cccomp_out;
 		logic br_taken;
+		logic dcache_stall;
 	//Memory-wb signals
 		logic load_mem_wb;
 		lc3b_word mem_wb_address_out;
@@ -103,7 +105,8 @@ assign i_mem_read = 1'b1;
 assign i_mem_byte_enable = 2'b11;
 assign i_mem_write = 1'b0;
 assign load_pc = i_mem_resp;
-assign load_if_id = i_mem_resp;
+assign load_if_id = i_mem_resp & !dcache_stall;
+assign if_id_v_in = !br_taken;
 
 mux3 pcmux
 (
@@ -135,7 +138,7 @@ register if_id_pc
 (
 	.clk,
 	.load(load_if_id),
-	.in(pc_out),
+	.in(pc_plus2_out),
 	.out(if_id_pc_out)
 );
 
@@ -151,7 +154,7 @@ register #(.width(1)) if_id_v
 (
 	.clk,
 	.load(load_if_id),
-	.in(load_if_id),
+	.in(if_id_v_in),
 	.out(if_id_v_out)
 );
 //End Fetch - Decode Pipe Components
@@ -198,11 +201,14 @@ register #(.width(3)) cc
 
 //Decode - Execute Pipe Components
 assign load_id_ex = id_ex_v_logic_out;
+assign id_ex_v_in = !br_taken & if_id_v_out;
 
 id_ex_v_logic id_ex_v_logic
 (
 	.clk,
 	.i_mem_resp(i_mem_resp),
+	.dcache_stall(dcache_stall),
+	.br_taken(br_taken),
 	.out(id_ex_v_logic_out)
 );
 
@@ -265,8 +271,8 @@ register #(.width(3)) id_ex_dest
 register #(.width(1)) id_ex_v
 (
 	.clk,
-	.load(load_id_ex),
-	.in(id_ex_v_logic_out),
+	.load(id_ex_v_logic_out),
+	.in(id_ex_v_in),
 	.out(id_ex_v_out)
 );
 
@@ -342,7 +348,8 @@ alu alu
 //End Execute Stage components
 
 //Execute-Memory Pipe Components
-assign load_ex_mem = 1'b1;
+assign load_ex_mem = !dcache_stall;
+assign ex_mem_v_in = !br_taken & id_ex_v_out;
 
 register ex_mem_address
 (
@@ -405,7 +412,7 @@ register #(.width(1)) ex_mem_v
 (
 	.clk,
 	.load(load_ex_mem),
-	.in(load_ex_mem),
+	.in(ex_mem_v_in),
 	.out(ex_mem_v_out)
 );
 
@@ -420,6 +427,8 @@ assign d_mem_write = ex_mem_cs_out.dcacheW;
 assign d_mem_address = ex_mem_address_out;
 assign dcache_enable = ex_mem_cs_out.dcache_enable & ex_mem_v_out;
 assign pcmux_sel = {1'b0,br_taken};
+assign dcache_stall = dcache_enable & !d_mem_resp;
+assign mem_wb_v_in = !br_taken & ex_mem_v_out;
 
 cccomp cccomp
 (
@@ -439,7 +448,7 @@ and3input br_and
 mem_wb_valid_logic mem_wb_valid_logic
 (
 	.opcode(ex_mem_cs_out.opcode),
-	.d_mem_resp(d_mem_resp),
+	.dcache_stall(dcache_stall),
 	.out(load_mem_wb)
 );
 //End Memory Stage Components
@@ -505,7 +514,7 @@ register #(.width(1)) mem_wb_v
 (
 	.clk,
 	.load(load_mem_wb),
-	.in(load_mem_wb),
+	.in(mem_wb_v_in),
 	.out(mem_wb_v_out)
 );
 //End memory - writeback pipe components

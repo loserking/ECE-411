@@ -17,6 +17,7 @@ module l1dcache
     /* Memory signals */
     output mem_resp,
     output lc3b_word mem_rdata,
+	 output logic hit,
 
 
 	 output logic pmem_read,
@@ -29,7 +30,6 @@ module l1dcache
 
 /*internal signals*/
 
-logic hit;
 logic lru_out;
 logic data0write;
 logic data1write;
