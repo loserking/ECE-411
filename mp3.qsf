@@ -73,6 +73,9 @@ set_global_assignment -name SYSTEMVERILOG_FILE tag_comp.sv
 set_global_assignment -name SYSTEMVERILOG_FILE "sixteen-onetwentyeightconcat.sv"
 set_global_assignment -name SYSTEMVERILOG_FILE "eight-eightconcat.sv"
 set_global_assignment -name SYSTEMVERILOG_FILE l1cache_datapath.sv
+set_global_assignment -name SYSTEMVERILOG_FILE shft.sv
+set_global_assignment -name SYSTEMVERILOG_FILE zextlshf.sv
+set_global_assignment -name SYSTEMVERILOG_FILE BR_box.sv
 set_global_assignment -name SYSTEMVERILOG_FILE mem_wb_valid_logic.sv
 set_global_assignment -name SYSTEMVERILOG_FILE gencc.sv
 set_global_assignment -name SYSTEMVERILOG_FILE and2input.sv

@@ -9,6 +9,6 @@ module zextlshf1 #(parameter width = 8)
     output lc3b_word out
 );
 
-assign out = {in, 8'b00000000} << 1;
+assign out = { 8'b00000000,in} << 1;
 
 endmodule : zextlshf1

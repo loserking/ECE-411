@@ -56,16 +56,23 @@ module cpu_datapath
 		logic id_ex_v_logic_out;
 		lc3b_control_word id_ex_cs_out;
 		logic id_ex_v_in;
+		lc3b_reg dest_mux_out;
+
 	//Execute signals
 		lc3b_word sext5_out;
 		lc3b_word sext6_out;
 		lc3b_word sext9_out;
+		lc3b_word sext11_out;
 		lc3b_word addr2mux_out;
 		lc3b_word lshf1_out;
 		lc3b_word addr1mux_out;
+		lc3b_word addr3mux_out;
+		lc3b_word zextlshf_out;
 		lc3b_word addressadder_out;
 		lc3b_word sr2mux_out;
 		lc3b_word alu_out;
+		lc3b_word shft_out;
+		lc3b_word alu_result_mux_out;
 	//Execute-memory signals
 		logic load_ex_mem;
 		lc3b_word ex_mem_address_out;
@@ -74,14 +81,19 @@ module cpu_datapath
 		lc3b_reg ex_mem_cc_out;
 		lc3b_word ex_mem_pc_out;
 		lc3b_reg ex_mem_dest_out;
+		logic uncond_or_trap;
 		logic ex_mem_v_out;
 		lc3b_word ex_mem_aluresult_out;
 		logic ex_mem_v_in;
 	//Memory signals
 		lc3b_word mem_target;
+		lc3b_word mem_trap;
 		logic cccomp_out;
 		logic br_taken;
 		logic dcache_stall;
+		logic jsr_taken;
+		logic trap_taken;
+
 	//Memory-wb signals
 		logic load_mem_wb;
 		lc3b_word mem_wb_address_out;
@@ -112,12 +124,13 @@ assign load_pc = i_mem_resp & !dcache_stall;
 assign load_if_id = i_mem_resp & !dcache_stall;
 assign if_id_v_in = !br_taken;
 
-mux3 pcmux
+mux4 pcmux
 (
 	.sel(pcmux_sel),
 	.a(pc_plus2_out),
-	.b(mem_target),
-	.c(),  //Trap signal -- not needed for cp1
+	.b(mem_target),										
+	.c(mem_trap),  										
+	.d(ex_mem_aluresult_out), 								
 	.f(pcmux_out)
 );
 
@@ -201,6 +214,17 @@ register #(.width(3)) cc
 	.out(cc_out)
 );
 
+
+
+
+mux2 #(.width(3)) dest_mux
+(
+	.sel(control_store.dest_mux_sel),
+	.a(if_id_ir_out[11:9]),
+	.b(3'b111), //hardcode 111
+	.f(dest_mux_out)
+);
+
 //End Decode Stage Components
 
 //Decode - Execute Pipe Components
@@ -268,7 +292,7 @@ register #(.width(3)) id_ex_dest
 (
 	.clk,
 	.load(load_id_ex),
-	.in(if_id_ir_out[11:9]),
+	.in(dest_mux_out),
 	.out(id_ex_dest_out)
 );
 
@@ -301,6 +325,14 @@ sext #(.width(5)) sext5
 	.out(sext5_out)
 );
 
+sext #(.width(11)) sext11
+(
+	.in(id_ex_ir_out[10:0]),
+	.out(sext11_out)
+
+
+);
+
 lshf1 lshf1
 (
 	.sel(id_ex_cs_out.lshf),
@@ -322,7 +354,7 @@ mux4 addr2mux
 	.a(16'b0000000000000000),
 	.b(sext6_out),
 	.c(sext9_out),
-	.d(), // sext11 not needed for cp1
+	.d(sext11_out), 
 	.f(addr2mux_out)
 );
 
@@ -349,6 +381,39 @@ alu alu
 	.f(alu_out)
 );
 
+
+shft shft
+(
+	.in(id_ex_sr1_out),
+	.shiftword(id_ex_ir_out[5:0]),
+	.out(shft_out)
+);
+
+mux2 alu_result_mux
+(
+	.sel(id_ex_cs_out.alu_result_mux_sel),
+	.a(alu_out), //default 0 for just alu_out
+	.b(shft_out), // 1 for when we shift
+	.f(alu_result_mux_out)
+
+);
+
+zextlshf1 zextlshf
+(
+	.in(id_ex_ir_out[7:0]),
+	.out(zextlshf_out)
+
+);
+
+mux2 addr3mux
+(
+	.sel(id_ex_cs_out.addr3mux_sel),
+	.a(addressadder_out),
+	.b(zextlshf_out),
+	.f(addr3mux_out)
+
+);
+
 //End Execute Stage components
 
 //Execute-Memory Pipe Components
@@ -359,7 +424,7 @@ register ex_mem_address
 (
 	.clk,
 	.load(load_ex_mem),
-	.in(addressadder_out),
+	.in(addr3mux_out),
 	.out(ex_mem_address_out)
 );
 
@@ -400,7 +465,7 @@ register ex_mem_aluresult
 (
 	.clk,
 	.load(load_ex_mem),
-	.in(alu_out),
+	.in(alu_result_mux_out),
 	.out(ex_mem_aluresult_out)
 );
 
@@ -424,15 +489,22 @@ register #(.width(1)) ex_mem_v
 
 //Memory Stage Components
 assign mem_target = ex_mem_address_out;
+assign mem_trap = d_mem_rdata;
 assign d_mem_byte_enable = 2'b11;
 assign d_mem_wdata = ex_mem_aluresult_out;
 assign d_mem_read = ex_mem_cs_out.dcacheR;
 assign d_mem_write = ex_mem_cs_out.dcacheW;
 assign d_mem_address = ex_mem_address_out;
+
 assign dcache_enable = ex_mem_cs_out.dcache_enable & ex_mem_v_out;
-assign pcmux_sel = {1'b0,br_taken};
 assign dcache_stall = dcache_enable & !d_mem_resp;
 assign mem_wb_v_in = !br_taken & ex_mem_v_out;
+
+
+assign uncond_or_trap = ex_mem_cs_out.uncond_op || ex_mem_cs_out.trap_op;
+assign jsr_taken = ex_mem_cs_out.br_op & ex_mem_v_out;
+assign trap_taken = uncond_or_trap & ex_mem_v_out;
+
 
 cccomp cccomp
 (
@@ -449,11 +521,21 @@ and3input br_and
 	.z(br_taken)
 );
 
+
 mem_wb_valid_logic mem_wb_valid_logic
 (
 	.opcode(ex_mem_cs_out.opcode),
 	.dcache_stall(dcache_stall),
 	.out(load_mem_wb)
+);
+
+BR_box BR_box
+(
+	.a(trap_taken),
+	.b(jsr_taken),
+	.c(br_taken),
+	.d(ex_mem_cs_out.jmp_op),
+	.out(pcmux_sel)
 );
 //End Memory Stage Components
 
@@ -528,9 +610,9 @@ register #(.width(1)) mem_wb_v
 mux4 wbmux
 (
 	.sel(mem_wb_cs_out.wbmux_sel),
-	.a(), //mem_wb_address_out -- not needed for cp1
+	.a(mem_wb_address_out), //mem_wb_address_out -- not needed for cp1
 	.b(mem_wb_data_out),
-	.c(), // mem_wb_pc_out -- not needed for cp1
+	.c(mem_wb_pc_out), 
 	.d(mem_wb_aluresult_out),
 	.f(wbmux_out)
 );

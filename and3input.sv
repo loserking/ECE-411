@@ -1,8 +1,8 @@
 /*calculates and*/
 
 module and3input(
-		input wire r, x, y,
-		output wire z
+		input logic r, x, y,
+		output logic z
 		
 );
 

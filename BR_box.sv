@@ -1,10 +1,11 @@
-import lc3b_types::*;
+
 
 module BR_box
 (
-	input wire a,
-	input wire b,
-	input wire c,
+	input logic a,
+	input logic b,
+	input logic c,
+	input logic d,
 	
 	output logic [1:0] out  
 
@@ -14,12 +15,14 @@ always_comb
 begin
 	
 	
-	if (a == 1) /*TRAPAND ==1*/
+	if (a == 1) //TRAP
 		out = 2'b10;
 	
-	else if(c || b) /*TAKEBR or JSRAND*/
+	else if(c || b) //BR and JSR
 		out = 2'b01;
-	else
+	else if(d) //JMP
+		out = 2'b11;
+	else 
 		out = 2'b00;
 
 
