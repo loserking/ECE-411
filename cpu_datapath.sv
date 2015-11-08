@@ -104,7 +104,7 @@ assign i_mem_wdata = 16'b0000000000000000;
 assign i_mem_read = 1'b1;
 assign i_mem_byte_enable = 2'b11;
 assign i_mem_write = 1'b0;
-assign load_pc = i_mem_resp;
+assign load_pc = i_mem_resp & !dcache_stall;
 assign load_if_id = i_mem_resp & !dcache_stall;
 assign if_id_v_in = !br_taken;
 

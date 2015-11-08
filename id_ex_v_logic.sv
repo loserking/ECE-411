@@ -27,10 +27,10 @@ end
 
 always_comb
 begin
-    if((data == (2'b11)) || (data == (2'b10)))
-		out = 1;
-	 else if(dcache_stall == 1)
+    if(dcache_stall == 1)
 		out = 0;
+	 else if((data == (2'b11)) || (data == (2'b10)))
+		out = 1;
 	 else if(br_taken)
 		out = 0;
 	 else 
