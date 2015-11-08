@@ -69,6 +69,7 @@ typedef struct packed
 	logic jmp_op;
 	lc3b_word pc;
 	logic dest_mux_sel;
+	logic alu_result_mux_sel;
 	
 }lc3b_control_word;
 

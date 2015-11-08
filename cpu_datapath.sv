@@ -65,6 +65,8 @@ module cpu_datapath
 		lc3b_word addressadder_out;
 		lc3b_word sr2mux_out;
 		lc3b_word alu_out;
+		lc3b_word shft_out;
+		lc3b_word alu_result_mux_out;
 	//Execute-memory signals
 		logic load_ex_mem;
 		lc3b_word ex_mem_address_out;
@@ -356,6 +358,23 @@ alu alu
 	.f(alu_out)
 );
 
+
+shft shft
+(
+	.in(id_ex_sr1_out),
+	.shiftword(id_ex_ir_out[5:0]),
+	.out(shft_out)
+);
+
+mux2 alu_result_mux
+(
+	.sel(id_ex_cs_out.alu_result_mux_sel),
+	.a(alu_out), //default 0 for just alu_out
+	.b(shft_out), // 1 for when we shift
+	.f(alu_result_mux_out)
+
+);
+
 zextlshf1 zextlshf
 (
 	.in(id_ex_ir_out[7:0]),
@@ -422,7 +441,7 @@ register ex_mem_aluresult
 (
 	.clk,
 	.load(load_ex_mem),
-	.in(alu_out),
+	.in(alu_result_mux_out),
 	.out(ex_mem_aluresult_out)
 );
 

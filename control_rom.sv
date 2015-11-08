@@ -35,7 +35,7 @@ begin
     ctrl.storemux_sel = 1'b0;
 	 ctrl.pc = pc;
 	 ctrl.dest_mux_sel = 1'b0;
-	 //ctrl.jmp = //jmp || br_op;
+	 ctrl.alu_result_mux_sel = 1'b0;
 
     /*Assign control signals based on opcode */
     case(opcode)
@@ -151,6 +151,15 @@ begin
 				ctrl.dcacheR = 1;
 				
 				//pc_mux_sel gets 2'b10 and  sends mem_trap in the PC
+		  end
+		  
+		  op_shf:
+		  begin
+				ctrl.alu_result_mux_sel = 1;
+				ctrl.load_cc = 1;
+				ctrl.load_reg = 1;
+				ctrl.wbmux_sel = 2'b11;
+				
 		  end
 		  
 		  

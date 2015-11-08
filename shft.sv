@@ -12,11 +12,11 @@ module shft #(parameter width = 16)
 
 always_comb
 begin
-	if(shiftword[5] == 0)
+	if(shiftword[4] == 0)
 		out = in << shiftword[3:0];
 	else
 	begin
-		if(shiftword[4] == 0)
+		if(shiftword[5] == 0)
 			out = in >> shiftword[3:0];
 		else
 			out = $signed(in) >>> shiftword[3:0];

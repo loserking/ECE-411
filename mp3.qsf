@@ -56,6 +56,7 @@ set_global_assignment -name EDA_TEST_BENCH_MODULE_NAME mp3_tb -section_id mp3_tb
 set_global_assignment -name EDA_TEST_BENCH_FILE magic_memory_dp.sv -section_id mp3_tb
 set_global_assignment -name EDA_TEST_BENCH_FILE mp3_tb.sv -section_id mp3_tb
 set_global_assignment -name EDA_TIME_SCALE "1 ps" -section_id eda_simulation
+set_global_assignment -name SYSTEMVERILOG_FILE shft.sv
 set_global_assignment -name SYSTEMVERILOG_FILE zextlshf.sv
 set_global_assignment -name SYSTEMVERILOG_FILE BR_box.sv
 set_global_assignment -name SYSTEMVERILOG_FILE mem_wb_valid_logic.sv
