@@ -71,6 +71,8 @@ typedef struct packed
 	lc3b_word pc;
 	logic dest_mux_sel;
 	logic alu_result_mux_sel;
+	logic d_mem_byte_sel;
+	logic stb_op;
 	
 }lc3b_control_word;
 
