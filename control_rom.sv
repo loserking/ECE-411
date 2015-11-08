@@ -36,6 +36,8 @@ begin
 	 ctrl.pc = pc;
 	 ctrl.dest_mux_sel = 1'b0;
 	 ctrl.alu_result_mux_sel = 1'b0;
+	ctrl.d_mem_byte_sel = 1'b0;
+	ctrl.stb_op = 1'b0;
 
     /*Assign control signals based on opcode */
     case(opcode)
@@ -170,6 +172,17 @@ begin
 				ctrl.load_cc = 1;
 				ctrl.load_reg = 1;
 				ctrl.dcacheR = 1;
+				ctrl.d_mem_byte_sel = 1;
+		  end
+		  
+		  op_stb:
+		  begin
+				ctrl.addr2mux_sel = 2'b01;
+				ctrl.addr1mux_sel = 1;
+				ctrl.storemux_sel = 1;
+				ctrl.dcacheW = 1;
+				ctrl.aluop = alu_passb;
+				ctrl.stb_op = 1;
 		  end
 		  
 		  

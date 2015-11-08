@@ -85,6 +85,19 @@ module cpu_datapath
 		logic br_taken;
 		logic jsr_taken;
 		logic trap_taken;
+		lc3b_word HBzext_out;
+		lc3b_word LBzext_out;
+		lc3b_word dcachemux_out;
+		lc3b_word dcachemux2_out;
+		lc3b_word bytefill_out;
+		lc3b_word dcachewritemux_out;
+		logic andWE0_out;
+		logic andWE1_out;
+		logic andWE_sel_out;
+		logic WE0;
+		logic WE1;
+		
+		
 	//Memory-wb signals
 		logic load_mem_wb;
 		lc3b_word mem_wb_address_out;
@@ -467,7 +480,7 @@ register #(.width(1)) ex_mem_v
 assign mem_target = ex_mem_address_out;
 assign mem_trap = d_mem_rdata;
 assign d_mem_byte_enable = 2'b11;
-assign d_mem_wdata = ex_mem_aluresult_out;
+assign d_mem_wdata = dcachewritemux_out;
 assign d_mem_read = ex_mem_cs_out.dcacheR;
 assign d_mem_write = ex_mem_cs_out.dcacheW;
 assign d_mem_address = ex_mem_address_out;
@@ -507,6 +520,96 @@ BR_box BR_box
 	.d(ex_mem_cs_out.jmp_op),
 	.out(pcmux_sel)
 );
+
+
+
+/*LDB*/
+zext #(.width(8)) HBzext
+(
+	.in(d_mem_rdata[15:8]),
+	.out(HBzext_out)
+);
+
+zext #(.width(8)) LBzext
+(
+	.in(d_mem_rdata[7:0]),
+	.out(LBzext_out)
+);
+
+
+
+mux2 dcachemux
+(
+	.sel(ex_mem_address_out[0]),
+	.a(LBzext_out),
+	.b(HBzext_out),
+	.f(dcachemux_out)
+
+);
+
+mux2 dcachemux2
+(
+	.sel(ex_mem_cs_out.d_mem_byte_sel),
+	.a(d_mem_rdata),
+	.b(dcachemux_out),
+	.f(dcachemux2_out)
+
+);
+/*STB*/
+
+bytefill #(.width(8)) bytefill
+(
+	.in(ex_mem_aluresult_out[7:0]),
+	.bytefill_sel(ex_mem_address_out[0]),
+	.out(bytefill_out)
+);
+
+mux2 dcachewritemux
+(
+	.sel(ex_mem_cs_out.stb_op),
+	.a(ex_mem_aluresult_out),
+	.b(bytefill_out),
+	.f(dcachewritemux_out)
+);
+
+and2input andWE0
+(
+	.x(ex_mem_cs_out.dcacheW),
+	.y(!ex_mem_address_out[0]),
+	.z(andWE0_out)
+);
+
+and2input andWE1
+(
+	.x(ex_mem_cs_out.dcacheW),
+	.y(ex_mem_address_out[0]),
+	.z(andWE1_out)
+);
+
+and2input andWE_sel
+(
+	.x(ex_mem_cs_out.dcacheW),
+	.y(ex_mem_cs_out.stb_op),
+	.z(andWE_sel_out)
+);
+
+mux2 #(.width(1)) WE0mux
+(
+	.sel(andWE_sel_out),
+	.a(1'b1),
+	.b(andWE0_out),
+	.f(WE0)
+);
+
+mux2 #(.width(1)) WE1mux
+(
+	.sel(andWE_sel_out),
+	.a(1'b1),
+	.b(andWE1_out),
+	.f(WE1)
+);
+
+
 //End Memory Stage Components
 
 //Memory - Write Back Pipe Components
@@ -522,7 +625,7 @@ register mem_wb_data
 (
 	.clk,
 	.load(load_mem_wb),
-	.in(d_mem_rdata),
+	.in(dcachemux2_out),
 	.out(mem_wb_data_out)
 );
 
