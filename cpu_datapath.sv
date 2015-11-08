@@ -502,7 +502,7 @@ assign mem_wb_v_in = !br_taken & ex_mem_v_out;
 
 
 assign uncond_or_trap = ex_mem_cs_out.uncond_op || ex_mem_cs_out.trap_op;
-assign jsr_taken = ex_mem_cs_out.br_op & ex_mem_v_out;
+assign jsr_taken = ex_mem_cs_out.jsr_op & ex_mem_v_out;
 assign trap_taken = uncond_or_trap & ex_mem_v_out;
 
 
