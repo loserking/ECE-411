@@ -162,6 +162,16 @@ begin
 				
 		  end
 		  
+		  op_ldb:
+		  begin
+				ctrl.addr1mux_sel = 1;
+				ctrl.addr2mux_sel = 2'b01;
+				ctrl.wbmux_sel = 2'b01;
+				ctrl.load_cc = 1;
+				ctrl.load_reg = 1;
+				ctrl.dcacheR = 1;
+		  end
+		  
 		  
 		  
         /*all the other opcodes*/
