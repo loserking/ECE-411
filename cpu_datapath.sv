@@ -37,6 +37,7 @@ module cpu_datapath
 		logic load_if_id;
 		lc3b_word if_id_pc_out;
 		lc3b_word if_id_ir_out;
+		logic if_id_v_in;
 	//Decode Signals
 		lc3b_reg storemux_out;
 		lc3b_word sr1_out;
@@ -54,6 +55,7 @@ module cpu_datapath
 		logic load_id_ex;
 		logic id_ex_v_logic_out;
 		lc3b_control_word id_ex_cs_out;
+		logic id_ex_v_in;
 	//Execute signals
 		lc3b_word sext5_out;
 		lc3b_word sext6_out;
@@ -74,6 +76,7 @@ module cpu_datapath
 		lc3b_reg ex_mem_dest_out;
 		logic ex_mem_v_out;
 		lc3b_word ex_mem_aluresult_out;
+		logic ex_mem_v_in;
 	//Memory signals
 		lc3b_word mem_target;
 		logic cccomp_out;
@@ -89,6 +92,7 @@ module cpu_datapath
 		lc3b_word mem_wb_ir_out;
 		lc3b_reg mem_wb_dest_out;
 		logic mem_wb_v_out;
+		logic mem_wb_v_in;
 	//wb signals
 		lc3b_word wbmux_out;
 		lc3b_reg wb_cc_data;
