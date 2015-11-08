@@ -479,11 +479,13 @@ register #(.width(1)) ex_mem_v
 //Memory Stage Components
 assign mem_target = ex_mem_address_out;
 assign mem_trap = d_mem_rdata;
-assign d_mem_byte_enable = 2'b11;
+//assign d_mem_byte_enable = 2'b11;
 assign d_mem_wdata = dcachewritemux_out;
 assign d_mem_read = ex_mem_cs_out.dcacheR;
 assign d_mem_write = ex_mem_cs_out.dcacheW;
 assign d_mem_address = ex_mem_address_out;
+assign d_mem_byte_enable[1] = WE1;
+assign d_mem_byte_enable[0] = WE0;
 
 assign uncond_or_trap = ex_mem_cs_out.uncond_op || ex_mem_cs_out.trap_op;
 assign jsr_taken = ex_mem_cs_out.br_op & ex_mem_v_out;
