@@ -144,6 +144,8 @@ arbiter arbiter
 	 .d_mem_wdata(d_pmem_wdata), 
 	 .l2_mem_rdata(l2_mem_rdata),
 	 .l2_mem_resp(l2_mem_resp),
+	 .d_mem_byte_enable(d_mem_byte_enable),
+	 .i_mem_byte_enable(i_mem_byte_enable),
 	 .arbiter_i_mem_resp(arbiter_i_mem_resp),
 	 .arbiter_d_mem_resp(arbiter_d_mem_resp),
 	 
@@ -152,7 +154,8 @@ arbiter arbiter
 	 .arbiter_mem_read(arbiter_mem_read),
 	 .arbiter_mem_address(arbiter_mem_address),
 	 .arbiter_d_mem_rdata(arbiter_d_mem_rdata),
-	 .arbiter_i_mem_rdata(arbiter_i_mem_rdata)
+	 .arbiter_i_mem_rdata(arbiter_i_mem_rdata),
+	 .arbiter_pmem_byte_enable(pmem_byte_enable)
 );
 /*End Arbiter Components*/
 

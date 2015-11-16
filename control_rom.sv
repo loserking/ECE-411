@@ -117,7 +117,6 @@ begin
 		  op_jmp:										/*same as RET*/
 		  begin
 				//all we need to do is pass sr1_out from the regfile into the pc
-				ctrl.load_reg = 1;
 				ctrl.jmp_op = 1;
 				
 		  end
@@ -156,6 +155,7 @@ begin
 				//then zext+lsfht
 				ctrl.addr3mux_sel = 1;
 				ctrl.dcacheR = 1;
+				ctrl.dcache_enable = 1;
 				
 				//pc_mux_sel gets 2'b10 and  sends mem_trap in the PC
 		  end
@@ -178,6 +178,7 @@ begin
 				ctrl.load_reg = 1;
 				ctrl.dcacheR = 1;
 				ctrl.d_mem_byte_sel = 1;
+				ctrl.dcache_enable = 1;
 		  end
 		  
 		  op_stb:
@@ -188,6 +189,7 @@ begin
 				ctrl.dcacheW = 1;
 				ctrl.aluop = alu_passb;
 				ctrl.stb_op = 1;
+				ctrl.dcache_enable = 1;
 		  end
 		  
 		  
