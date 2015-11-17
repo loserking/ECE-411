@@ -18,6 +18,7 @@ module arbiter_control
 	 output logic memaddressmux_sel,
 	 output logic memwdatamux_sel,
 	 output logic memrdatademux_sel,
+	 output logic byteenablemux_sel,
 	 output logic memrespmux_sel
 );
 
@@ -41,6 +42,7 @@ begin : state_actions
 	  memwdatamux_sel = 1'b0;
 	  memrdatademux_sel = 1'b0;
 	  memrespmux_sel = 1'b0;
+	  byteenablemux_sel = 1'b0;
      case(state)
 			s_idle:begin
 			end
@@ -51,6 +53,7 @@ begin : state_actions
 				memwdatamux_sel = 1'b1;
 				memrdatademux_sel = 1'b1;
 				memrespmux_sel = 1'b1;
+				byteenablemux_sel = 1'b1;
 			end
 			s_dmiss:begin
 			end

@@ -17,6 +17,8 @@ module arbiter_datapath
 	 input cache_line d_mem_wdata, 
 	 input cache_line l2_mem_rdata,
 	 input logic l2_mem_resp,
+	 input logic[1:0] d_mem_byte_enable,
+	 input logic[1:0] i_mem_byte_enable,
 	 //From arbiter control
 	 input logic readsignalmux_sel,
 	 input logic writesignalmux_sel,
@@ -24,6 +26,7 @@ module arbiter_datapath
 	 input logic memwdatamux_sel,
 	 input logic memrdatademux_sel,
 	 input logic memrespmux_sel,
+	 input logic byteenablemux_sel,
 	 
 	 output logic arbiter_i_mem_resp,
 	 output logic arbiter_d_mem_resp,
@@ -32,6 +35,7 @@ module arbiter_datapath
 	 output cache_line arbiter_mem_wdata,
 	 output logic arbiter_mem_write,
 	 output logic arbiter_mem_read,
+	 output logic[1:0] arbiter_pmem_byte_enable,
 	 output lc3b_word arbiter_mem_address
 );
 
@@ -42,6 +46,14 @@ mux2 #(.width(1)) readsignalmux
 	 .a(d_mem_read),
 	 .b(i_mem_read),
 	 .f(arbiter_mem_read)
+);
+
+mux2 #(.width(2)) byteenablemux
+(
+	.sel(byteenablemux_sel),
+	.a(d_mem_byte_enable),
+	.b(i_mem_byte_enable),
+	.f(arbiter_pmem_byte_enable)
 );
 
 mux2 #(.width(1)) writesignalmux
