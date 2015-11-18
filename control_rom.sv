@@ -41,6 +41,7 @@ begin
 	ctrl.d_mem_byte_sel = 1'b0;
 	ctrl.stb_op = 1'b0;
 	ctrl.ldi_op = 1'b0;
+	ctrl.ldb_op = 1'b0;
 
 
     /*Assign control signals based on opcode */
@@ -119,6 +120,7 @@ begin
 		  begin
 				//all we need to do is pass sr1_out from the regfile into the pc
 				ctrl.jmp_op = 1;
+				ctrl.load_reg = 1;
 				
 		  end
 		  
@@ -155,6 +157,7 @@ begin
 				ctrl.wbmux_sel = 2'b10;
 				//then zext+lsfht
 				ctrl.addr3mux_sel = 1;
+				ctrl.dcache_enable = 1;
 				ctrl.dcacheR = 1;
 				ctrl.dcache_enable = 1;
 				
@@ -177,9 +180,11 @@ begin
 				ctrl.wbmux_sel = 2'b01;
 				ctrl.load_cc = 1;
 				ctrl.load_reg = 1;
+				ctrl.dcache_enable = 1;
 				ctrl.dcacheR = 1;
 				ctrl.d_mem_byte_sel = 1;
 				ctrl.dcache_enable = 1;
+				ctrl.ldb_op = 1;
 		  end
 		  
 		  op_stb:
@@ -187,6 +192,7 @@ begin
 				ctrl.addr2mux_sel = 2'b01;
 				ctrl.addr1mux_sel = 1;
 				ctrl.storemux_sel = 1;
+				ctrl.dcache_enable = 1;
 				ctrl.dcacheW = 1;
 				ctrl.aluop = alu_passb;
 				ctrl.stb_op = 1;
@@ -215,6 +221,7 @@ begin
 				ctrl.storemux_sel = 1;
 				ctrl.dcacheW = 1;
 				ctrl.aluop = alu_passb;
+				ctrl.dcache_enable = 1;
 				
 		  end
 		  
