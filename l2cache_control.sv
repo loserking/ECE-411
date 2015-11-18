@@ -11,7 +11,7 @@ module l2cache_control
 	 input [1:0] mem_byte_enable,
 	 input mem_write,
 	 input mem_read,
-	 input lc3b_word mem_wdata,
+	 input cache_line mem_wdata,
 	 input logic lru_out,
 	 input logic way0and_out,
 	 
