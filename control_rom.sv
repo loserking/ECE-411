@@ -41,6 +41,7 @@ begin
 	ctrl.d_mem_byte_sel = 1'b0;
 	ctrl.stb_op = 1'b0;
 	ctrl.ldi_op = 1'b0;
+	ctrl.sti_op = 1'b0;
 	ctrl.ldb_op = 1'b0;
 
 
@@ -159,7 +160,7 @@ begin
 				ctrl.addr3mux_sel = 1;
 				ctrl.dcache_enable = 1;
 				ctrl.dcacheR = 1;
-				ctrl.dcache_enable = 1;
+				
 				
 				//pc_mux_sel gets 2'b10 and  sends mem_trap in the PC
 		  end
@@ -183,7 +184,6 @@ begin
 				ctrl.dcache_enable = 1;
 				ctrl.dcacheR = 1;
 				ctrl.d_mem_byte_sel = 1;
-				ctrl.dcache_enable = 1;
 				ctrl.ldb_op = 1;
 		  end
 		  
@@ -196,7 +196,7 @@ begin
 				ctrl.dcacheW = 1;
 				ctrl.aluop = alu_passb;
 				ctrl.stb_op = 1;
-				ctrl.dcache_enable = 1;
+				
 		  end
 		  
 		  
@@ -222,6 +222,9 @@ begin
 				ctrl.dcacheW = 1;
 				ctrl.aluop = alu_passb;
 				ctrl.dcache_enable = 1;
+				ctrl.ldi_op = 1; //turn on ldi op so that we can get the mem[mem[address]]
+				ctrl.dcacheR = 1;// ^ need to read from mem too before we can write to it
+				ctrl.sti_op = 1;
 				
 		  end
 		  

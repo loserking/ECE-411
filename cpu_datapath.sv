@@ -514,7 +514,7 @@ assign mem_trap = d_mem_rdata;
 assign d_mem_wdata = dcachewritemux_out;
 assign d_mem_read = ex_mem_cs_out.dcacheR;
 assign d_mem_write = ex_mem_cs_out.dcacheW;
-assign d_mem_address = ex_mem_address_out;
+assign d_mem_address = dcache_addressmux_out;
 assign d_mem_byte_enable[1] = WE1;
 assign d_mem_byte_enable[0] = WE0;
 
@@ -544,9 +544,9 @@ begin
 		dcache_addressmux_sel  = 1'b0;
 	else
 		if(ldicounterout == 2'b01)
-			dcache_addressmux_sel  = 1'b0;
-		else
 			dcache_addressmux_sel  = 1'b1;
+		else
+			dcache_addressmux_sel  = 1'b0;
 end	
 	
 mux2 dcache_addressmux
@@ -644,11 +644,14 @@ bytefill #(.width(8)) bytefill
 	.out(bytefill_out)
 );
 
-mux2 dcachewritemux
+
+
+
+mux3 dcachewritemux
 (
 	.sel(ex_mem_cs_out.stb_op),
-	.a(ex_mem_aluresult_out),
-	.b(bytefill_out),
+	.a(ex_mem_aluresult_out), //this is the case for sti as well
+	.b(bytefill_out), //stb uses the bytebill though
 	.f(dcachewritemux_out)
 );
 
@@ -710,7 +713,7 @@ mux2 mem_wb_data_mux
 register ldi_reg
 (
 	.clk,
-	.load(load_mem_wb),//this can problable honestly just always be high
+	.load(1'b1),//this can problable honestly just always be high
 	.in(d_mem_rdata),
 	.out(ldi_reg_out)
 
