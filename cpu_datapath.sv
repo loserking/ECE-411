@@ -73,6 +73,10 @@ module cpu_datapath
 		lc3b_word alu_out;
 		lc3b_word shft_out;
 		lc3b_word alu_result_mux_out;
+		lc3b_word forwardmux1_out;
+		lc3b_word forwardmux2_out;
+		logic forwardmux1_sel;
+		logic forwardmux2_sel;
 	//Execute-memory signals
 		logic load_ex_mem;
 		lc3b_word ex_mem_address_out;
@@ -398,15 +402,15 @@ mux2 sr2mux
 alu alu
 (
 	.aluop(id_ex_cs_out.aluop),
-	.a(id_ex_sr1_out),
-	.b(sr2mux_out),
+	.a(forwardmux1_out),
+	.b(forwardmux2_out),
 	.f(alu_out)
 );
 
 
 shft shft
 (
-	.in(id_ex_sr1_out),
+	.in(forwardmux1_out),
 	.shiftword(id_ex_ir_out[5:0]),
 	.out(shft_out)
 );
@@ -435,6 +439,49 @@ mux2 addr3mux
 	.f(addr3mux_out)
 
 );
+
+
+/*begin data forwarding*/
+
+forwarding_unit forwarding_unit
+(
+	.clk,
+	.load_reg(id_ex_cs_out.load_reg),
+	.ex_mem_DR(ex_mem_dest_out),
+	.mem_wb_DR(mem_wb_dest_out),
+	.id_ex_SR1(id_ex_sr1_out),
+	.id_ex_SR2(id_ex_sr2_out),
+	.forwardmux1_sel(forwardmux1_sel),
+	.forwardmux2_sel(forwardmux2_sel)
+);
+
+mux3 forwardmux1
+(
+	.sel(forwardmux1_sel),
+	.a(id_ex_sr1_out),
+	.b(wbmux_out),
+	.c(ex_mem_aluresult_out),
+	.f(forwardmux1_out)
+
+);
+
+mux3 forwardmux2
+(
+	.sel(forwardmux2_sel),
+	.a(sr2mux_out),
+	.b(wbmux_out),
+	.c(ex_mem_aluresult_out),
+	.f(forwardmux2_out)
+
+);
+
+
+
+
+
+
+
+/*end data forwarding */
 
 //End Execute Stage components
 
