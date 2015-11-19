@@ -667,7 +667,7 @@ bytefill #(.width(8)) bytefill
 );
 
 
-
+//Test
 
 mux2 dcachewritemux
 (
@@ -714,26 +714,6 @@ mux2 #(.width(1)) WE1mux
 	.f(WE1)
 );
 
-always_comb
-begin
-	if(ex_mem_cs_out.ldi_op)
-		mem_wb_data_mux_sel = 0;
-	else if(ex_mem_cs_out.ldb_op)
-		mem_wb_data_mux_sel = 1;
-	else 
-		mem_wb_data_mux_sel= 0;
-end
-
-mux2 mem_wb_data_mux
-(
-	.sel(mem_wb_data_mux_sel),
-	.a(d_mem_rdata), //for ldi_op = 1;
-	.b(dcachemux2_out), // for ldb_op = 1;
-	.f(mem_wb_data_mux_out)
-
-);
-
-
 //End Memory Stage Components
 
 //Memory - Write Back Pipe Components
@@ -749,7 +729,7 @@ register mem_wb_data
 (
 	.clk,
 	.load(load_mem_wb),
-	.in(mem_wb_data_mux_out),
+	.in(dcachemux2_out),
 	.out(mem_wb_data_out)
 );
 
