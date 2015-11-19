@@ -5,6 +5,7 @@ module twobitcounter
 	input logic clk,
 	input logic d_mem_resp,
 	input logic ldi_op,
+	input logic sti_op,
 	input logic dcache_stall,
 	output logic [1:0] count
 );
@@ -22,9 +23,9 @@ end
 
 always_ff @(posedge clk)
 begin
-	if((d_mem_resp) &&(ldi_op)&&(!dcache_stall))
+	if((d_mem_resp) &&(ldi_op || sti_op)&&(!dcache_stall))
 		data++;
-	else if((ldi_op) &&(dcache_stall))
+	else if((ldi_op || sti_op) &&(dcache_stall))
 		data = data;
 	else
 		data = 0;

@@ -112,7 +112,10 @@ module cpu_datapath
 		lc3b_word mem_wb_data_mux_out;
 		lc3b_word ldistireg_out;
 		logic load_ldistireg;
-		
+		logic dcacheRmux_sel;
+		logic dcacheWmux_sel;
+		logic dcacheRmux_out;
+		logic dcacheWmux_out;
 		
 
 	//Memory-wb signals
@@ -513,8 +516,24 @@ register #(.width(1)) ex_mem_v
 assign mem_target = ex_mem_address_out;
 assign mem_trap = d_mem_rdata;
 assign d_mem_wdata = dcachewritemux_out;
-assign d_mem_read = ex_mem_cs_out.dcacheR;
-assign d_mem_write = ex_mem_cs_out.dcacheW;
+
+assign d_mem_read = dcacheRmux_out;
+assign d_mem_write = dcacheWmux_out;
+
+always_comb
+begin
+	if((ex_mem_cs_out.sti_op) &&(ldisticounterout == 2'b00))
+	begin
+		dcacheRmux_sel = 1;
+		dcacheWmux_sel = 1;
+	end
+	else
+	begin
+		dcacheRmux_sel = 0;
+		dcacheWmux_sel = 0;
+	end
+end
+
 assign d_mem_address = dcacheaddressmux_out;
 assign d_mem_byte_enable[1] = WE1;
 assign d_mem_byte_enable[0] = WE0;
@@ -529,6 +548,23 @@ assign jsr_taken = ex_mem_cs_out.jsr_op & ex_mem_v_out;
 assign trap_taken = uncond_or_trap & ex_mem_v_out;
 assign load_ldistireg = d_mem_resp;
 
+
+mux2 #(.width(1)) dcacheRmux
+(
+	.sel(dcacheRmux_sel),
+	.a(ex_mem_cs_out.dcacheR),
+	.b(1'b0),
+	.f(dcacheRmux_out)
+);
+
+mux2 #(.width(1)) dcacheWmux
+(
+	.sel(dcacheWmux_sel),
+	.a(ex_mem_cs_out.dcacheW),
+	.b(1'b0),
+	.f(dcacheWmux_out)
+);
+
 /*Begin LDI logic*/
 always_comb
 begin
@@ -542,12 +578,12 @@ begin
 		ldi_stall = 1;
 		dcacheaddressmux_sel = 0;
 	end
-		else if((ldisticounterout == 2'b01)&&(ex_mem_cs_out.ldi_op))
+		else if((ldisticounterout == 2'b01)&&(ex_mem_cs_out.ldi_op || ex_mem_cs_out.sti_op))
 	begin
 		ldi_stall = 0;
 		dcacheaddressmux_sel = 1;
 	end
-	else if((ldisticounterout == 2'b01)&&(ex_mem_cs_out.ldi_op)&&(d_mem_resp))
+	else if((ldisticounterout == 2'b01)&&(ex_mem_cs_out.ldi_op || ex_mem_cs_out.sti_op)&&(d_mem_resp))
 	begin
 		ldi_stall = 0;
 		dcacheaddressmux_sel = 0;
@@ -570,6 +606,7 @@ twobitcounter ldisticounter
 	.clk,
 	.d_mem_resp(d_mem_resp),
 	.ldi_op(ex_mem_cs_out.ldi_op),
+	.sti_op(ex_mem_cs_out.sti_op),
 	.dcache_stall(dcache_stall),
 	.count(ldisticounterout)
 );
@@ -666,8 +703,6 @@ bytefill #(.width(8)) bytefill
 	.out(bytefill_out)
 );
 
-
-//Test
 
 mux2 dcachewritemux
 (
