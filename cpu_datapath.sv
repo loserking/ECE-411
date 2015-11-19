@@ -93,7 +93,10 @@ module cpu_datapath
 		logic dcache_stall;
 		logic jsr_taken;
 		logic trap_taken;
-
+		lc3b_word dcacheaddressmux_out;
+		logic dcacheaddressmux_sel;
+		logic ldi_stall;
+		logic [1:0] ldisticounterout;
 		lc3b_word HBzext_out;
 		lc3b_word LBzext_out;
 		lc3b_word dcachemux_out;
@@ -105,6 +108,10 @@ module cpu_datapath
 		logic andWE_sel_out;
 		logic WE0;
 		logic WE1;
+		logic mem_wb_data_mux_sel;
+		lc3b_word mem_wb_data_mux_out;
+		lc3b_word ldistireg_out;
+		logic load_ldistireg;
 		
 		
 
@@ -134,7 +141,7 @@ assign i_mem_wdata = 16'b0000000000000000;
 assign i_mem_read = 1'b1;
 assign i_mem_byte_enable = 2'b11;
 assign i_mem_write = 1'b0;
-assign load_pc = i_mem_resp & !dcache_stall;
+assign load_pc = i_mem_resp & !dcache_stall & !ldi_stall;
 assign load_if_id = i_mem_resp & !dcache_stall;
 assign if_id_v_in = !br_taken;
 
@@ -250,6 +257,7 @@ id_ex_v_logic id_ex_v_logic
 	.clk,
 	.i_mem_resp(i_mem_resp),
 	.dcache_stall(dcache_stall),
+	.ldi_stall(ldi_stall),
 	.br_taken(br_taken),
 	.out(id_ex_v_logic_out)
 );
@@ -431,7 +439,7 @@ mux2 addr3mux
 //End Execute Stage components
 
 //Execute-Memory Pipe Components
-assign load_ex_mem = !dcache_stall;
+assign load_ex_mem = !dcache_stall & !ldi_stall;
 assign ex_mem_v_in = !br_taken & id_ex_v_out;
 
 register ex_mem_address
@@ -504,11 +512,10 @@ register #(.width(1)) ex_mem_v
 //Memory Stage Components
 assign mem_target = ex_mem_address_out;
 assign mem_trap = d_mem_rdata;
-//assign d_mem_byte_enable = 2'b11;
 assign d_mem_wdata = dcachewritemux_out;
 assign d_mem_read = ex_mem_cs_out.dcacheR;
 assign d_mem_write = ex_mem_cs_out.dcacheW;
-assign d_mem_address = ex_mem_address_out;
+assign d_mem_address = dcacheaddressmux_out;
 assign d_mem_byte_enable[1] = WE1;
 assign d_mem_byte_enable[0] = WE0;
 
@@ -520,7 +527,68 @@ assign mem_wb_v_in = !br_taken & ex_mem_v_out;
 assign uncond_or_trap = ex_mem_cs_out.uncond_op || ex_mem_cs_out.trap_op;
 assign jsr_taken = ex_mem_cs_out.jsr_op & ex_mem_v_out;
 assign trap_taken = uncond_or_trap & ex_mem_v_out;
+assign load_ldistireg = d_mem_resp;
 
+/*Begin LDI logic*/
+always_comb
+begin
+	if((ldisticounterout == 2'b00) && (!d_mem_resp))
+	begin
+		ldi_stall = 0;
+		dcacheaddressmux_sel = 0;
+	end
+	else if((ldisticounterout == 2'b00) && (d_mem_resp))
+	begin
+		ldi_stall = 1;
+		dcacheaddressmux_sel = 0;
+	end
+		else if((ldisticounterout == 2'b01)&&(ex_mem_cs_out.ldi_op))
+	begin
+		ldi_stall = 0;
+		dcacheaddressmux_sel = 1;
+	end
+	else if((ldisticounterout == 2'b01)&&(ex_mem_cs_out.ldi_op)&&(d_mem_resp))
+	begin
+		ldi_stall = 0;
+		dcacheaddressmux_sel = 0;
+	end
+	else if(ldisticounterout == 2'b10)
+	begin
+		ldi_stall = 0;
+		dcacheaddressmux_sel = 0;
+	end
+	else
+	begin
+		ldi_stall = 0;
+		dcacheaddressmux_sel = 0;
+	end
+end
+/*End LDI Stall Logic*/
+
+twobitcounter ldisticounter
+(
+	.clk,
+	.d_mem_resp(d_mem_resp),
+	.ldi_op(ex_mem_cs_out.ldi_op),
+	.dcache_stall(dcache_stall),
+	.count(ldisticounterout)
+);
+
+mux2 dcacheaddressmux
+(
+	.sel(dcacheaddressmux_sel),
+	.a(ex_mem_address_out),
+	.b(ldistireg_out),
+	.f(dcacheaddressmux_out)
+);
+
+register ldistireg
+(
+	.clk,
+	.load(load_ldistireg),
+	.in(d_mem_rdata),
+	.out(ldistireg_out)
+);
 
 cccomp cccomp
 (
@@ -540,7 +608,8 @@ and3input br_and
 
 mem_wb_valid_logic mem_wb_valid_logic
 (
-	.opcode(ex_mem_cs_out.opcode),
+	.ldi_cs(ex_mem_cs_out.ldi_op),
+	.ldi_stall(ldi_stall),
 	.dcache_stall(dcache_stall),
 	.out(load_mem_wb)
 );
@@ -597,11 +666,14 @@ bytefill #(.width(8)) bytefill
 	.out(bytefill_out)
 );
 
+
+
+
 mux2 dcachewritemux
 (
 	.sel(ex_mem_cs_out.stb_op),
-	.a(ex_mem_aluresult_out),
-	.b(bytefill_out),
+	.a(ex_mem_aluresult_out), //this is the case for sti as well
+	.b(bytefill_out), //stb uses the bytebill though
 	.f(dcachewritemux_out)
 );
 
@@ -642,6 +714,25 @@ mux2 #(.width(1)) WE1mux
 	.f(WE1)
 );
 
+always_comb
+begin
+	if(ex_mem_cs_out.ldi_op)
+		mem_wb_data_mux_sel = 0;
+	else if(ex_mem_cs_out.ldb_op)
+		mem_wb_data_mux_sel = 1;
+	else 
+		mem_wb_data_mux_sel= 0;
+end
+
+mux2 mem_wb_data_mux
+(
+	.sel(mem_wb_data_mux_sel),
+	.a(d_mem_rdata), //for ldi_op = 1;
+	.b(dcachemux2_out), // for ldb_op = 1;
+	.f(mem_wb_data_mux_out)
+
+);
+
 
 //End Memory Stage Components
 
@@ -658,7 +749,7 @@ register mem_wb_data
 (
 	.clk,
 	.load(load_mem_wb),
-	.in(dcachemux2_out),
+	.in(mem_wb_data_mux_out),
 	.out(mem_wb_data_out)
 );
 

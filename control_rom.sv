@@ -40,6 +40,9 @@ begin
 	 ctrl.alu_result_mux_sel = 1'b0;
 	ctrl.d_mem_byte_sel = 1'b0;
 	ctrl.stb_op = 1'b0;
+	ctrl.ldi_op = 1'b0;
+	ctrl.sti_op = 1'b0;
+	ctrl.ldb_op = 1'b0;
 
 
     /*Assign control signals based on opcode */
@@ -118,6 +121,7 @@ begin
 		  begin
 				//all we need to do is pass sr1_out from the regfile into the pc
 				ctrl.jmp_op = 1;
+				ctrl.load_reg = 1;
 				
 		  end
 		  
@@ -154,8 +158,9 @@ begin
 				ctrl.wbmux_sel = 2'b10;
 				//then zext+lsfht
 				ctrl.addr3mux_sel = 1;
-				ctrl.dcacheR = 1;
 				ctrl.dcache_enable = 1;
+				ctrl.dcacheR = 1;
+				
 				
 				//pc_mux_sel gets 2'b10 and  sends mem_trap in the PC
 		  end
@@ -176,9 +181,10 @@ begin
 				ctrl.wbmux_sel = 2'b01;
 				ctrl.load_cc = 1;
 				ctrl.load_reg = 1;
+				ctrl.dcache_enable = 1;
 				ctrl.dcacheR = 1;
 				ctrl.d_mem_byte_sel = 1;
-				ctrl.dcache_enable = 1;
+				ctrl.ldb_op = 1;
 		  end
 		  
 		  op_stb:
@@ -186,10 +192,40 @@ begin
 				ctrl.addr2mux_sel = 2'b01;
 				ctrl.addr1mux_sel = 1;
 				ctrl.storemux_sel = 1;
+				ctrl.dcache_enable = 1;
 				ctrl.dcacheW = 1;
 				ctrl.aluop = alu_passb;
 				ctrl.stb_op = 1;
+				
+		  end
+		  
+		  
+		  op_ldi:
+		  begin
+				ctrl.addr1mux_sel = 1;
+				ctrl.addr2mux_sel = 2'b01;
+				ctrl.wbmux_sel = 2'b01;
+				ctrl.load_cc = 1;
+				ctrl.lshf = 1;
+				ctrl.load_reg = 1;
+				ctrl.dcacheR = 1;
+				ctrl.ldi_op = 1;
 				ctrl.dcache_enable = 1;
+		  end
+		  
+		  op_sti:
+		  begin
+				ctrl.addr2mux_sel = 2'b01;
+				ctrl.addr1mux_sel = 1;
+				ctrl.lshf = 1;
+				ctrl.storemux_sel = 1;
+				ctrl.dcacheW = 1;
+				ctrl.aluop = alu_passb;
+				ctrl.dcache_enable = 1;
+				ctrl.ldi_op = 1; //turn on ldi op so that we can get the mem[mem[address]]
+				ctrl.dcacheR = 1;// ^ need to read from mem too before we can write to it
+				ctrl.sti_op = 1;
+				
 		  end
 		  
 		  
