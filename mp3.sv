@@ -3,13 +3,13 @@ import lc3b_types::*;
 module mp3
 (
     input clk,
-	 input logic l2_mem_resp,
-	 input cache_line l2_mem_rdata,
-	 output logic arbiter_mem_read,
-	 output logic arbiter_mem_write,
+	 input logic pmem_mem_resp,
+	 input cache_line pmem_mem_rdata,
+	 output logic pmem_mem_read,
+	 output logic pmem_mem_write,
 	 output logic [1:0] pmem_byte_enable,
-	 output cache_line arbiter_mem_wdata,
-	 output lc3b_word arbiter_mem_address
+	 output cache_line pmem_mem_wdata,
+	 output lc3b_word pmem_mem_address
 	 
 );
 /*Begin internal signals*/
@@ -52,6 +52,16 @@ module mp3
 		cache_line arbiter_d_mem_rdata;
 		logic arbiter_i_mem_resp;
 		logic arbiter_d_mem_resp;
+		cache_line arbiter_mem_wdata;
+		logic arbiter_mem_write;
+		logic arbiter_mem_read;
+		lc3b_word arbiter_mem_address;
+		logic [1:0] arbiter_pmem_byte_enable;
+	/*L2 Cache Internal Signals*/
+		cache_line l2_mem_rdata;
+		logic l2_mem_resp;
+
+assign pmem_byte_enable = arbiter_pmem_byte_enable;
 /*End Internal Signals*/
 /*Begin CPU datapath components */
 cpu_datapath cpu_datapath
@@ -155,8 +165,35 @@ arbiter arbiter
 	 .arbiter_mem_address(arbiter_mem_address),
 	 .arbiter_d_mem_rdata(arbiter_d_mem_rdata),
 	 .arbiter_i_mem_rdata(arbiter_i_mem_rdata),
-	 .arbiter_pmem_byte_enable(pmem_byte_enable)
+	 .arbiter_pmem_byte_enable(arbiter_pmem_byte_enable)
 );
 /*End Arbiter Components*/
+l2cache l2cache
+(
+    .clk,
+	 .pmem_rdata(pmem_mem_rdata),
+	 .pmem_resp(pmem_mem_resp),
+	 .l2_mem_byte_enable(arbiter_pmem_byte_enable),
+	 .l2_mem_address(arbiter_mem_address),
+	 .l2_mem_wdata(arbiter_mem_wdata), //cache_line size for l2
+	 .l2_mem_read(arbiter_mem_read),
+    .l2_mem_write(arbiter_mem_write),
 
+
+    /* Memory signals */
+    .l2_mem_resp(l2_mem_resp),
+    .l2_mem_rdata(l2_mem_rdata),  //cache line size for l2
+
+
+	 .pmem_read(pmem_mem_read),
+	 .pmem_write(pmem_mem_write),
+	 .pmem_address(pmem_mem_address),
+	 .pmem_wdata(pmem_mem_wdata)
+	 
+);
+
+/*Begin L2Cache Components*/
+
+
+/*End L2Cache Components*/
 endmodule : mp3

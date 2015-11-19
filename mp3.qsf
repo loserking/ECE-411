@@ -62,6 +62,9 @@ set_global_assignment -name EDA_TEST_BENCH_FILE mp3_tb.sv -section_id mp3_tb
 
 
 
+set_global_assignment -name SYSTEMVERILOG_FILE l2cache.sv
+set_global_assignment -name SYSTEMVERILOG_FILE l2cache_control.sv
+set_global_assignment -name SYSTEMVERILOG_FILE l2cache_datapath.sv
 set_global_assignment -name SYSTEMVERILOG_FILE twobitcounter.sv
 set_global_assignment -name SYSTEMVERILOG_FILE id_ex_v_logic.sv
 set_global_assignment -name SYSTEMVERILOG_FILE l1dcache_control.sv
