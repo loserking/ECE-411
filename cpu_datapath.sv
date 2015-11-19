@@ -93,10 +93,10 @@ module cpu_datapath
 		logic dcache_stall;
 		logic jsr_taken;
 		logic trap_taken;
-		lc3b_word dcache_addressmux_out;
-		logic dcache_addressmux_sel;
+		lc3b_word dcacheaddressmux_out;
+		logic dcacheaddressmux_sel;
 		logic ldi_stall;
-		logic [1:0] ldicounterout;
+		logic [1:0] ldisticounterout;
 		lc3b_word HBzext_out;
 		lc3b_word LBzext_out;
 		lc3b_word dcachemux_out;
@@ -110,7 +110,8 @@ module cpu_datapath
 		logic WE1;
 		logic mem_wb_data_mux_sel;
 		lc3b_word mem_wb_data_mux_out;
-		lc3b_word ldi_reg_out;
+		lc3b_word ldistireg_out;
+		logic load_ldistireg;
 		
 		
 
@@ -514,7 +515,7 @@ assign mem_trap = d_mem_rdata;
 assign d_mem_wdata = dcachewritemux_out;
 assign d_mem_read = ex_mem_cs_out.dcacheR;
 assign d_mem_write = ex_mem_cs_out.dcacheW;
-assign d_mem_address = dcache_addressmux_out;
+assign d_mem_address = dcacheaddressmux_out;
 assign d_mem_byte_enable[1] = WE1;
 assign d_mem_byte_enable[0] = WE0;
 
@@ -526,38 +527,69 @@ assign mem_wb_v_in = !br_taken & ex_mem_v_out;
 assign uncond_or_trap = ex_mem_cs_out.uncond_op || ex_mem_cs_out.trap_op;
 assign jsr_taken = ex_mem_cs_out.jsr_op & ex_mem_v_out;
 assign trap_taken = uncond_or_trap & ex_mem_v_out;
+assign load_ldistireg = d_mem_resp;
 
+/*Begin LDI logic*/
 always_comb
 begin
-	if(ldicounterout == 2'b01)
-		ldi_stall = 1;
-	else if(ldicounterout == 2'b10)
-		ldi_stall = 1;
-	else	
+	if((ldisticounterout == 2'b00) && (!d_mem_resp))
+	begin
 		ldi_stall = 0;
-end
-
-
-always_comb
-begin
-	if(!ex_mem_cs_out.ldi_op)
-		dcache_addressmux_sel  = 1'b0;
+		dcacheaddressmux_sel = 0;
+	end
+	else if((ldisticounterout == 2'b00) && (d_mem_resp))
+	begin
+		ldi_stall = 1;
+		dcacheaddressmux_sel = 0;
+	end
+		else if((ldisticounterout == 2'b01)&&(ex_mem_cs_out.ldi_op))
+	begin
+		ldi_stall = 0;
+		dcacheaddressmux_sel = 1;
+	end
+	else if((ldisticounterout == 2'b01)&&(ex_mem_cs_out.ldi_op)&&(d_mem_resp))
+	begin
+		ldi_stall = 0;
+		dcacheaddressmux_sel = 0;
+	end
+	else if(ldisticounterout == 2'b10)
+	begin
+		ldi_stall = 0;
+		dcacheaddressmux_sel = 0;
+	end
 	else
-		if(ldicounterout == 2'b01)
-			dcache_addressmux_sel  = 1'b1;
-		else
-			dcache_addressmux_sel  = 1'b0;
-end	
-	
-mux2 dcache_addressmux
-(
-	.sel(dcache_addressmux_sel),
-	.a(ex_mem_address_out),
-	.b(ldi_reg_out), //d_mem_rdata_reg_out
-	.f(dcache_addressmux_out)
+	begin
+		ldi_stall = 0;
+		dcacheaddressmux_sel = 0;
+	end
+end
+/*End LDI Stall Logic*/
 
+twobitcounter ldisticounter
+(
+	.clk,
+	.d_mem_resp(d_mem_resp),
+	.ldi_op(ex_mem_cs_out.ldi_op),
+	.dcache_stall(dcache_stall),
+	.count(ldisticounterout)
 );
-	
+
+mux2 dcacheaddressmux
+(
+	.sel(dcacheaddressmux_sel),
+	.a(ex_mem_address_out),
+	.b(ldistireg_out),
+	.f(dcacheaddressmux_out)
+);
+
+register ldistireg
+(
+	.clk,
+	.load(load_ldistireg),
+	.in(d_mem_rdata),
+	.out(ldistireg_out)
+);
+
 cccomp cccomp
 (
 	.a(ex_mem_cc_out),
@@ -591,16 +623,6 @@ BR_box BR_box
 	.out(pcmux_sel)
 );
 
-onebitldicounter ldicounter
-(
-	.clk,
-	.d_mem_write(ex_mem_cs_out.dcacheW),
-	.d_mem_read(ex_mem_cs_out.dcacheR),
-	.d_mem_resp(d_mem_resp),
-	.ldi_cs(ex_mem_cs_out.ldi_op),
-	.out(ldicounterout)
-
-);
 
 
 /*LDB*/
@@ -647,7 +669,7 @@ bytefill #(.width(8)) bytefill
 
 
 
-mux3 dcachewritemux
+mux2 dcachewritemux
 (
 	.sel(ex_mem_cs_out.stb_op),
 	.a(ex_mem_aluresult_out), //this is the case for sti as well
@@ -701,22 +723,13 @@ begin
 	else 
 		mem_wb_data_mux_sel= 0;
 end
+
 mux2 mem_wb_data_mux
 (
 	.sel(mem_wb_data_mux_sel),
 	.a(d_mem_rdata), //for ldi_op = 1;
 	.b(dcachemux2_out), // for ldb_op = 1;
 	.f(mem_wb_data_mux_out)
-
-);
-
-register ldi_reg
-(
-	.clk,
-	.load(1'b1),//this can problable honestly just always be high
-	.in(d_mem_rdata),
-	.out(ldi_reg_out)
-
 
 );
 
