@@ -44,6 +44,7 @@ module cpu_datapath
 		lc3b_word sr2_out;
 		lc3b_reg cc_out;
 		lc3b_control_word control_store;
+		logic hazard_stall;
 	//Decode - Execute Signals
 		lc3b_word id_ex_pc_out;
 		lc3b_word id_ex_ir_out;
@@ -153,8 +154,8 @@ assign i_mem_wdata = 16'b0000000000000000;
 assign i_mem_read = 1'b1;
 assign i_mem_byte_enable = 2'b11;
 assign i_mem_write = 1'b0;
-assign load_pc = i_mem_resp & !dcache_stall & !ldi_stall;
-assign load_if_id = i_mem_resp & !dcache_stall;
+assign load_pc = i_mem_resp & !dcache_stall & !ldi_stall & !hazard_stall;
+assign load_if_id = i_mem_resp & !dcache_stall & !hazard_stall;
 assign if_id_v_in = !br_taken;
 
 mux4 pcmux
@@ -210,6 +211,19 @@ register #(.width(1)) if_id_v
 //End Fetch - Decode Pipe Components
 
 //Decode Stage Components
+hazard_detection hazard_detection
+(
+	.dcacheR(id_ex_cs_out.dcacheR),
+	.id_ex_dr(id_ex_dest_out),
+	.if_id_src1(if_id_ir_out[8:6]),
+	.if_id_src2(if_id_ir_out[2:0]),
+	.if_id_srdr(if_id_ir_out[11:9]),
+	.dcacheW(control_store.dcacheW),
+	.id_ex_sr1_needed(id_ex_cs_out.sr1_needed),
+	.id_ex_sr2_needed(id_ex_cs_out.sr2_needed),
+	.hazard_stall(hazard_stall)
+);
+
 control_rom control_rom
 (
 	.opcode(lc3b_opcode'(if_id_ir_out[15:12])),
@@ -660,7 +674,7 @@ begin
 		ldi_stall = 0;
 		dcacheaddressmux_sel = 0;
 	end
-	else if((ldisticounterout == 2'b00) && (d_mem_resp))
+	else if((ldisticounterout == 2'b00) && (d_mem_resp)&&(ex_mem_cs_out.ldi_op || ex_mem_cs_out.sti_op))
 	begin
 		ldi_stall = 1;
 		dcacheaddressmux_sel = 0;
