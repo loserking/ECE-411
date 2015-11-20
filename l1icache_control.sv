@@ -21,6 +21,7 @@ module icache_control
 	 input pmem_resp,
 	 input logic dirtymux_out,
 	 input logic hit,
+	 input logic br_taken,
 	 
 	 output logic rwmux_sel,
 	 output logic stbwritemux_sel,
@@ -34,7 +35,8 @@ module icache_control
 	 output logic dirty0_in, dirty1_in,
     output logic pmem_write,
 	 output logic pmemmux_sel,
-	 output logic lru_write     
+	 output logic lru_write,
+	 output logic idle_state
 );
 
 enum int unsigned {
@@ -67,11 +69,13 @@ begin : state_actions
 	 lru_write = 1'b0;
 	 pmem_write = 1'b0;
 	 pmemmux_sel = 1'b0;
+	 idle_state = 1'b0;
     /* Actions for each state */
      
      case(state)
         s_idle: begin
 				lru_write = 0;
+				idle_state = 1;
 				if(mem_read && hit)
 				begin
 					mem_resp = 1;
@@ -178,7 +182,7 @@ begin : next_state_logic
          s_idle:
 				if(mem_read && hit)
 					next_state = s_idle;
-				else if(!hit && !dirtymux_out)
+				else if(!hit && !dirtymux_out && !br_taken)
 					next_state = s_allocate;
 				else if(!hit && dirtymux_out)
 					next_state = s_write_back;

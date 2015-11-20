@@ -38,6 +38,8 @@ module mp3
 		logic [1:0] i_pmem_byte_enable;
 		cache_line i_pmem_rdata;
 		logic i_pmem_resp;
+		logic br_taken;
+		logic idle_state;
 	/*L1 D cache internal signals*/
 		lc3b_word d_pmem_address;
 		cache_line d_pmem_wdata;
@@ -60,6 +62,7 @@ module mp3
 	/*L2 Cache Internal Signals*/
 		cache_line l2_mem_rdata;
 		logic l2_mem_resp;
+		logic l2hit;
 
 assign pmem_byte_enable = arbiter_pmem_byte_enable;
 /*End Internal Signals*/
@@ -82,7 +85,9 @@ cpu_datapath cpu_datapath
 	.d_mem_rdata(d_mem_rdata),
 	.dcache_enable(dcache_enable),
 	.d_mem_resp(d_mem_resp),
-	.dcache_hit(dcache_hit)
+	.dcache_hit(dcache_hit),
+	.br_taken(br_taken),
+	.idle_state(idle_state)
 );
 /*End CPU datapath components*/
 
@@ -98,7 +103,7 @@ l1icache l1icache
 	 .mem_byte_enable(i_mem_byte_enable),
 	 .mem_read(i_mem_read),
 	 
-     
+    .br_taken(br_taken),
  
     .pmem_rdata(arbiter_i_mem_rdata),
 	 .pmem_resp(arbiter_i_mem_resp),
@@ -108,7 +113,8 @@ l1icache l1icache
     .pmem_read(i_pmem_read),
     .pmem_write(i_pmem_write),
 	 .pmem_address(i_pmem_address),
-	 .pmem_wdata(i_pmem_wdata)
+	 .pmem_wdata(i_pmem_wdata),
+	 .idle_state(idle_state)
 );
 
 /*End L1 I-Cache Components*/
@@ -154,6 +160,7 @@ arbiter arbiter
 	 .d_mem_wdata(d_pmem_wdata), 
 	 .l2_mem_rdata(l2_mem_rdata),
 	 .l2_mem_resp(l2_mem_resp),
+	 .l2hit(l2hit),
 	 .d_mem_byte_enable(d_mem_byte_enable),
 	 .i_mem_byte_enable(i_mem_byte_enable),
 	 .arbiter_i_mem_resp(arbiter_i_mem_resp),
@@ -185,6 +192,7 @@ l2cache l2cache
     .l2_mem_rdata(l2_mem_rdata),  //cache line size for l2
 
 
+	 .l2hit(l2hit),
 	 .pmem_read(pmem_mem_read),
 	 .pmem_write(pmem_mem_write),
 	 .pmem_address(pmem_mem_address),

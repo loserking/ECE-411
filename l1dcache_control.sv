@@ -85,6 +85,8 @@ begin : state_actions
 				else if((mem_write && hit) && (mem_byte_enable != 2'b00))
 				begin
 					lru_write = 1;
+					if((mem_byte_enable == 2'b10) || (mem_byte_enable == 2'b01))
+						stbwritemux_sel = 1;
 					if(way0and_out)
 						begin
 							data0write = 1;
@@ -118,7 +120,7 @@ begin : state_actions
 		  s_pmem_complete: begin
 				if(mem_write)
 				begin
-					if((mem_byte_enable == 2'b10) | (mem_byte_enable == 2'b01))
+					if((mem_byte_enable == 2'b10) || (mem_byte_enable == 2'b01))
 						stbwritemux_sel = 1;
 					rwmux_sel = 1;
 					if(lru_out == 0)

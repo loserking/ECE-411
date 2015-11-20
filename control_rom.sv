@@ -132,7 +132,6 @@ begin
 				ctrl.storemux_sel = 1;
 				ctrl.load_cc = 1;
 				ctrl.load_reg = 1;
-				ctrl.br_op = 1;
 				ctrl.dr_needed = 1;
 		  end
 		  op_jmp:										/*same as RET*/
@@ -157,6 +156,7 @@ begin
 						ctrl.jmp_op = 1;
 						//first, make R7 hold the incremented PC value
 						ctrl.wbmux_sel = 2'b10;
+						ctrl.jsr_op = 0;
 						ctrl.sr1_needed = 1;
 				end
 				if(ir11 == 1)//jsr

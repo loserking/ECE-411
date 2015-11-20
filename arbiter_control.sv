@@ -10,7 +10,8 @@ module arbiter_control
 	 input logic i_mem_write,
 	 input logic d_mem_read,
 	 input logic d_mem_write,
-	 input l2_mem_resp,
+	 input logic l2_mem_resp,
+	 input logic l2hit,
 	 
 	 //To arbiter datapath
 	 output logic readsignalmux_sel,
@@ -75,7 +76,7 @@ begin : next_state_logic
 					next_state = s_bothmiss;
 				else if(i_mem_read || i_mem_write)
 					next_state = s_imiss;
-				else if(d_mem_read || d_mem_write)
+				else if((d_mem_read || d_mem_write) &(!l2hit))
 					next_state = s_dmiss;
 				else 
 					next_state = s_idle;

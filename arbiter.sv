@@ -16,6 +16,7 @@ module arbiter
 	 input l2_mem_resp,
 	 input logic[1:0] d_mem_byte_enable,
 	 input logic[1:0] i_mem_byte_enable,
+	 input logic l2hit,
 	 
 	 output logic arbiter_i_mem_resp,
 	 output logic arbiter_d_mem_resp,
@@ -49,6 +50,7 @@ arbiter_control arbiter_control
 	 .d_mem_read(d_mem_read),
 	 .d_mem_write(d_mem_write),
 	 .l2_mem_resp(l2_mem_resp),
+	 .l2hit(l2hit),
 	 
 	 //To arbiter datapath
 	 .readsignalmux_sel(readsignalmux_sel),

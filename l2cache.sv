@@ -20,6 +20,7 @@ module l2cache
 
 	 output logic pmem_read,
 	 output logic pmem_write,
+	 output logic l2hit,
 	 output lc3b_word pmem_address,
 	 output cache_line pmem_wdata
 	 
@@ -27,7 +28,6 @@ module l2cache
 
 
 /*internal signals*/
-
 logic hit;
 logic lru_out;
 logic data0write;
@@ -48,6 +48,8 @@ logic dirty0_in;
 logic dirty1_in;
 logic pmemmux_sel;
 
+
+assign l2hit = hit;
 
 l2cache_control l2cache_control
 (

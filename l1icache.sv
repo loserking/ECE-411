@@ -11,6 +11,7 @@ module l1icache
 	 input lc3b_word mem_wdata,
 	 input mem_read,
     input mem_write,
+	 input br_taken,
 
 
     /* Memory signals */
@@ -20,6 +21,7 @@ module l1icache
 
 	 output logic pmem_read,
 	 output logic pmem_write,
+	 output logic idle_state,
 	 output lc3b_word pmem_address,
 	 output cache_line pmem_wdata
 	 
@@ -68,6 +70,7 @@ icache_control icache_control
 	 .pmem_resp(pmem_resp),
 	 .dirtymux_out(dirtymux_out),
 	 .hit(hit),
+	 .br_taken(br_taken),
 	 
 	 .pmemmux_sel(pmemmux_sel),
 	 .rwmux_sel(rwmux_sel),
@@ -84,6 +87,7 @@ icache_control icache_control
 	 .dirty1write(dirty1write),
 	 .dirty0_in(dirty0_in),
 	 .dirty1_in(dirty1_in),
+	 .idle_state(idle_state),
     .pmem_write(pmem_write)
 );
 

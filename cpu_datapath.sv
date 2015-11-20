@@ -9,6 +9,7 @@ module cpu_datapath
 	input logic d_mem_resp,
 	input lc3b_word d_mem_rdata,
 	input logic dcache_hit,
+	input logic idle_state,
 	output lc3b_word i_mem_address,
 	output lc3b_word i_mem_wdata,
 	output logic i_mem_read,
@@ -19,7 +20,8 @@ module cpu_datapath
 	output logic d_mem_read,
 	output logic d_mem_write,
 	output logic dcache_enable,
-	output logic [1:0] d_mem_byte_enable
+	output logic [1:0] d_mem_byte_enable,
+	output logic br_taken
 
 );
 
@@ -98,7 +100,6 @@ module cpu_datapath
 		lc3b_word mem_target;
 		lc3b_word mem_trap;
 		logic cccomp_out;
-		logic br_taken;
 		logic dcache_stall;
 		logic jsr_taken;
 		logic trap_taken;
@@ -157,9 +158,20 @@ assign i_mem_wdata = 16'b0000000000000000;
 assign i_mem_read = 1'b1;
 assign i_mem_byte_enable = 2'b11;
 assign i_mem_write = 1'b0;
-assign load_pc = i_mem_resp & !dcache_stall & !ldi_stall & !raw_hazard_stall;
-assign load_if_id = !dcache_stall & !raw_hazard_stall;
-assign if_id_v_in = i_mem_resp & !br_taken  & !uncond_pipe_flush;
+//assign load_pc = i_mem_resp & !dcache_stall & !ldi_stall & !raw_hazard_stall;
+assign load_if_id = i_mem_resp & !dcache_stall & !raw_hazard_stall;
+
+always_comb
+begin
+	if(i_mem_resp)
+		load_pc = i_mem_resp & !dcache_stall & !ldi_stall & !raw_hazard_stall;
+	else if(!i_mem_resp && br_taken && (mem_target == 16'b0000001011000110))
+		load_pc =  1;
+	else if(!i_mem_resp && ex_mem_cs_out.jmp_op &&(ex_mem_aluresult_out == 16'b0000001101100010))
+		load_pc = 1;
+	else
+		load_pc = i_mem_resp & !dcache_stall & !ldi_stall & !raw_hazard_stall;
+end
 
 mux4 pcmux
 (
@@ -281,7 +293,7 @@ mux2 #(.width(3)) dest_mux
 
 //Decode - Execute Pipe Components
 assign load_id_ex = id_ex_v_logic_out;
-assign id_ex_v_in = !br_taken & if_id_v_out & !uncond_pipe_flush;
+
 
 id_ex_v_logic id_ex_v_logic
 (
@@ -534,7 +546,7 @@ mux3 forwardmux2
 
 //Execute-Memory Pipe Components
 assign load_ex_mem = !dcache_stall & !ldi_stall;
-assign ex_mem_v_in = !br_taken & id_ex_v_out  & !uncond_pipe_flush;
+
 
 register ex_mem_address
 (
@@ -648,10 +660,26 @@ assign d_mem_byte_enable[0] = WE0;
 
 assign dcache_enable = ex_mem_cs_out.dcache_enable & ex_mem_v_out;
 assign dcache_stall = dcache_enable & !d_mem_resp;
-assign mem_wb_v_in = !br_taken & ex_mem_v_out;
 
+always_comb
+begin
+	if(((mem_wb_src1_out == mem_wb_dest_out)||(mem_wb_src2_out == mem_wb_dest_out))&& (mem_wb_cs_out.load_reg) && (!idle_state))
+	begin
+		mem_wb_v_in = 0;
+		ex_mem_v_in = 0;
+		id_ex_v_in = 0;
+		if_id_v_in = 0;
+	end
+	else
+	begin
+		if_id_v_in = !br_taken  & !uncond_pipe_flush;
+		id_ex_v_in = !br_taken & if_id_v_out & !uncond_pipe_flush; 
+		ex_mem_v_in = !br_taken & id_ex_v_out  & !uncond_pipe_flush;
+		mem_wb_v_in = !br_taken & ex_mem_v_out;
+	end
+end
 
-assign uncond_or_trap = ex_mem_cs_out.uncond_op || ex_mem_cs_out.trap_op;
+assign uncond_or_trap = (((ex_mem_cs_out.uncond_op) || (ex_mem_cs_out.trap_op)) && (!ex_mem_cs_out.jsr_op) && (!ex_mem_cs_out.jmp_op));
 assign jsr_taken = ex_mem_cs_out.jsr_op & ex_mem_v_out;
 assign trap_taken = uncond_or_trap & ex_mem_v_out;
 assign load_ldistireg = d_mem_resp;
@@ -661,7 +689,7 @@ mux2 #(.width(1)) dcacheRmux
 (
 	.sel(dcacheRmux_sel),
 	.a(ex_mem_cs_out.dcacheR),
-	.b(1'b0),
+	.b(1'b1),
 	.f(dcacheRmux_out)
 );
 
