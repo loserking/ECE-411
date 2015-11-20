@@ -57,7 +57,8 @@ module cpu_datapath
 		lc3b_control_word id_ex_cs_out;
 		logic id_ex_v_in;
 		lc3b_reg dest_mux_out;
-
+		lc3b_reg id_ex_src1_out;
+		lc3b_reg id_ex_src2_out;
 	//Execute signals
 		lc3b_word sext5_out;
 		lc3b_word sext6_out;
@@ -73,6 +74,10 @@ module cpu_datapath
 		lc3b_word alu_out;
 		lc3b_word shft_out;
 		lc3b_word alu_result_mux_out;
+		lc3b_word forwardmux1_out;
+		lc3b_word forwardmux2_out;
+		logic [1:0] forwardmux1_sel;
+		logic [1:0] forwardmux2_sel;
 	//Execute-memory signals
 		logic load_ex_mem;
 		lc3b_word ex_mem_address_out;
@@ -85,6 +90,8 @@ module cpu_datapath
 		logic ex_mem_v_out;
 		lc3b_word ex_mem_aluresult_out;
 		logic ex_mem_v_in;
+		lc3b_reg ex_mem_src1_out;
+		lc3b_reg ex_mem_src2_out;
 	//Memory signals
 		lc3b_word mem_target;
 		lc3b_word mem_trap;
@@ -129,6 +136,8 @@ module cpu_datapath
 		lc3b_reg mem_wb_dest_out;
 		logic mem_wb_v_out;
 		logic mem_wb_v_in;
+		lc3b_reg mem_wb_src1_out;
+		lc3b_reg mem_wb_src2_out;
 	//wb signals
 		lc3b_word wbmux_out;
 		lc3b_reg wb_cc_data;
@@ -321,6 +330,22 @@ register #(.width(3)) id_ex_dest
 	.out(id_ex_dest_out)
 );
 
+register #(.width(3)) id_ex_src1
+(
+	.clk,
+	.load(load_id_ex),
+	.in(if_id_ir_out[8:6]),
+	.out(id_ex_src1_out)
+);
+
+register #(.width(3)) id_ex_src2
+(
+	.clk,
+	.load(load_id_ex),
+	.in(storemux_out),
+	.out(id_ex_src2_out)
+);
+
 register #(.width(1)) id_ex_v
 (
 	.clk,
@@ -401,15 +426,15 @@ mux2 sr2mux
 alu alu
 (
 	.aluop(id_ex_cs_out.aluop),
-	.a(id_ex_sr1_out),
-	.b(sr2mux_out),
+	.a(forwardmux1_out),
+	.b(forwardmux2_out),
 	.f(alu_out)
 );
 
 
 shft shft
 (
-	.in(id_ex_sr1_out),
+	.in(forwardmux1_out),
 	.shiftword(id_ex_ir_out[5:0]),
 	.out(shft_out)
 );
@@ -438,6 +463,51 @@ mux2 addr3mux
 	.f(addr3mux_out)
 
 );
+
+
+/*begin data forwarding*/
+
+forwarding_unit forwarding_unit
+(
+	.clk,
+	.load_reg(id_ex_cs_out.load_reg),
+	.ex_mem_DR(ex_mem_dest_out),
+	.mem_wb_DR(mem_wb_dest_out),
+	.id_ex_SR1(id_ex_src1_out),
+	.id_ex_SR2(id_ex_src2_out),
+	.id_ex_sr1_needed(id_ex_cs_out.sr1_needed),
+	.id_ex_sr2_needed(id_ex_cs_out.sr2_needed),
+	.id_ex_dr_needed(id_ex_cs_out.dr_needed),
+	.ex_mem_sr1_needed(ex_mem_cs_out.sr1_needed),
+	.ex_mem_sr2_needed(ex_mem_cs_out.sr2_needed),
+	.ex_mem_dr_needed(ex_mem_cs_out.dr_needed),
+	.mem_wb_sr1_needed(mem_wb_cs_out.sr1_needed),
+	.mem_wb_sr2_needed(mem_wb_cs_out.sr2_needed),
+	.mem_wb_dr_needed(mem_wb_cs_out.dr_needed),	
+	.forwardmux1_sel(forwardmux1_sel),
+	.forwardmux2_sel(forwardmux2_sel)
+);
+
+mux3 forwardmux1
+(
+	.sel(forwardmux1_sel),
+	.a(id_ex_sr1_out),
+	.b(wbmux_out),
+	.c(ex_mem_aluresult_out),
+	.f(forwardmux1_out)
+
+);
+
+mux3 forwardmux2
+(
+	.sel(forwardmux2_sel),
+	.a(sr2mux_out),
+	.b(wbmux_out),
+	.c(ex_mem_aluresult_out),
+	.f(forwardmux2_out)
+
+);
+/*end data forwarding */
 
 //End Execute Stage components
 
@@ -501,6 +571,23 @@ register #(.width(3)) ex_mem_dest
 	.in(id_ex_dest_out),
 	.out(ex_mem_dest_out)
 );
+
+register #(.width(3)) ex_mem_src1
+(
+	.clk,
+	.load(load_ex_mem),
+	.in(id_ex_src1_out),
+	.out(ex_mem_src1_out)
+);
+
+register #(.width(3)) ex_mem_src2
+(
+	.clk,
+	.load(load_ex_mem),
+	.in(id_ex_src2_out),
+	.out(ex_mem_src2_out)
+);
+
 
 register #(.width(1)) ex_mem_v
 (
@@ -703,7 +790,6 @@ bytefill #(.width(8)) bytefill
 	.out(bytefill_out)
 );
 
-
 mux2 dcachewritemux
 (
 	.sel(ex_mem_cs_out.stb_op),
@@ -806,6 +892,22 @@ register #(.width(3)) mem_wb_dest
 	.load(load_mem_wb),
 	.in(ex_mem_dest_out),
 	.out(mem_wb_dest_out)
+);
+
+register #(.width(3)) mem_wb_src1
+(
+	.clk,
+	.load(load_mem_wb),
+	.in(ex_mem_src1_out),
+	.out(mem_wb_src1_out)
+);
+
+register #(.width(3)) mem_wb_src2
+(
+	.clk,
+	.load(load_mem_wb),
+	.in(ex_mem_src2_out),
+	.out(mem_wb_src2_out)
 );
 
 register #(.width(1)) mem_wb_v

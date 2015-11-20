@@ -75,7 +75,10 @@ typedef struct packed
 	logic stb_op;
 	logic ldi_op;
 	logic sti_op;
-	logic ldb_op; 
+	logic ldb_op;
+	logic sr1_needed;
+	logic sr2_needed;
+	logic dr_needed;
 	
 }lc3b_control_word;
 

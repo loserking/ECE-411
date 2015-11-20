@@ -38,11 +38,14 @@ begin
 	 ctrl.dcache_enable = 1'b0;
 	 ctrl.dest_mux_sel = 1'b0;
 	 ctrl.alu_result_mux_sel = 1'b0;
-	ctrl.d_mem_byte_sel = 1'b0;
-	ctrl.stb_op = 1'b0;
-	ctrl.ldi_op = 1'b0;
-	ctrl.sti_op = 1'b0;
-	ctrl.ldb_op = 1'b0;
+	 ctrl.d_mem_byte_sel = 1'b0;
+	 ctrl.stb_op = 1'b0;
+	 ctrl.ldi_op = 1'b0;
+	 ctrl.sti_op = 1'b0;
+	 ctrl.ldb_op = 1'b0;
+	 ctrl.sr1_needed = 1'b0;
+	 ctrl.sr2_needed = 1'b0;
+	 ctrl.dr_needed = 1'b0;
 
 
     /*Assign control signals based on opcode */
@@ -53,9 +56,13 @@ begin
 				ctrl.load_reg = 1;
 				ctrl.load_cc = 1;
 				ctrl.wbmux_sel = 2'b11;
+				ctrl.sr1_needed = 1;
+				ctrl.sr2_needed = 1;
+				ctrl.dr_needed = 1;
 				if(ir5)
 				begin
 					ctrl.sr2mux_sel = 1;
+					ctrl.sr2_needed = 0;
 				end
         end
 
@@ -65,9 +72,13 @@ begin
 				ctrl.load_reg = 1;
 				ctrl.load_cc = 1;
 				ctrl.wbmux_sel = 2'b11;
+				ctrl.sr1_needed = 1;
+				ctrl.sr2_needed = 1;
+				ctrl.dr_needed = 1;
 				if(ir5)
 				begin
 					ctrl.sr2mux_sel = 1;
+					ctrl.sr2_needed = 0;
 				end
         end
 			
@@ -77,6 +88,8 @@ begin
 				ctrl.load_reg = 1;
 				ctrl.load_cc = 1;
 				ctrl.wbmux_sel = 2'b11;
+				ctrl.sr1_needed = 1;
+				ctrl.dr_needed = 1;
 		  end
 		  
 		  op_ldr:
@@ -89,6 +102,8 @@ begin
 				ctrl.lshf = 1;
 				ctrl.dcacheR = 1;
 				ctrl.dcache_enable = 1'b1;
+				ctrl.sr1_needed = 1;
+				ctrl.dr_needed = 1;
 		  end
 		  
 		  op_str:
@@ -100,6 +115,8 @@ begin
 				ctrl.dcacheW = 1;
 				ctrl.aluop = alu_passb;
 				ctrl.dcache_enable = 1'b1;
+				ctrl.sr1_needed = 1;
+				ctrl.dr_needed = 1;
 		  end
 		  
 		  op_br:
@@ -116,13 +133,14 @@ begin
 				ctrl.load_cc = 1;
 				ctrl.load_reg = 1;
 				ctrl.br_op = 1;
+				ctrl.dr_needed = 1;
 		  end
 		  op_jmp:										/*same as RET*/
 		  begin
 				//all we need to do is pass sr1_out from the regfile into the pc
 				ctrl.jmp_op = 1;
 				ctrl.load_reg = 1;
-				
+				ctrl.sr1_needed = 1;
 		  end
 		  
 		  op_jsr:
@@ -133,20 +151,21 @@ begin
 				
 				//then this goes into mem address and we send target pc to the pc
 				if(ir11 == 0)
-					begin
-					//JSRR is just a jump
-					ctrl.jmp_op = 1;
-					//first, make R7 hold the incremented PC value
-					ctrl.wbmux_sel = 2'b10;
-					end
+				begin
+						//JSRR is just a jump
+						ctrl.jmp_op = 1;
+						//first, make R7 hold the incremented PC value
+						ctrl.wbmux_sel = 2'b10;
+						ctrl.sr1_needed = 1;
+				end
 				if(ir11 == 1)//jsr
-					begin
+				begin
 					ctrl.br_op = 1;
 					ctrl.addr2mux_sel = 2'b11;
 					ctrl.lshf = 1;
 					//first, make R7 hold the incremented PC value
 					ctrl.wbmux_sel = 2'b10;
-					end
+				end
 		  end
 		  
 		  op_trap:
@@ -160,8 +179,6 @@ begin
 				ctrl.addr3mux_sel = 1;
 				ctrl.dcache_enable = 1;
 				ctrl.dcacheR = 1;
-				
-				
 				//pc_mux_sel gets 2'b10 and  sends mem_trap in the PC
 		  end
 		  
@@ -171,7 +188,8 @@ begin
 				ctrl.load_cc = 1;
 				ctrl.load_reg = 1;
 				ctrl.wbmux_sel = 2'b11;
-				
+				ctrl.sr1_needed = 1;
+				ctrl.dr_needed = 1;
 		  end
 		  
 		  op_ldb:
@@ -185,6 +203,8 @@ begin
 				ctrl.dcacheR = 1;
 				ctrl.d_mem_byte_sel = 1;
 				ctrl.ldb_op = 1;
+				ctrl.sr1_needed = 1;
+				ctrl.dr_needed = 1;
 		  end
 		  
 		  op_stb:
@@ -196,9 +216,9 @@ begin
 				ctrl.dcacheW = 1;
 				ctrl.aluop = alu_passb;
 				ctrl.stb_op = 1;
-				
+				ctrl.sr1_needed = 1;
+				ctrl.dr_needed = 1;
 		  end
-		  
 		  
 		  op_ldi:
 		  begin
@@ -211,6 +231,8 @@ begin
 				ctrl.dcacheR = 1;
 				ctrl.ldi_op = 1;
 				ctrl.dcache_enable = 1;
+				ctrl.sr1_needed = 1;
+				ctrl.dr_needed = 1;
 		  end
 		  
 		  op_sti:
@@ -223,11 +245,10 @@ begin
 				ctrl.aluop = alu_passb;
 				ctrl.dcache_enable = 1;
 				ctrl.sti_op = 1;
-				
+				ctrl.sr1_needed = 1;
+				ctrl.dr_needed = 1;
 		  end
-		  
-		  
-		  
+		 
         /*all the other opcodes*/
         
         default: 
