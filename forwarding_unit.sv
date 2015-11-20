@@ -20,6 +20,8 @@ module forwarding_unit
 	input logic mem_wb_sr1_needed,
 	input logic mem_wb_sr2_needed,
 	input logic mem_wb_dr_needed,
+	input logic ex_mem_v,
+	input logic mem_wb_v,
 	
 	
 	output logic [1:0] forwardmux1_sel,
@@ -37,16 +39,16 @@ begin
 	if(load_reg == 1)
 	begin
 	
-		if((ex_mem_DR == id_ex_SR1)&&(id_ex_sr1_needed) &&(ex_mem_dr_needed) &&(id_ex_dr_needed))
+		if((ex_mem_DR == id_ex_SR1)&&(id_ex_sr1_needed) &&(ex_mem_dr_needed) &&(id_ex_dr_needed) && (ex_mem_v))
 			forwardmux1_sel = 2'b10;
-		else if((mem_wb_DR == id_ex_SR1) && (id_ex_sr1_needed) && (mem_wb_dr_needed) && (id_ex_dr_needed))
+		else if((mem_wb_DR == id_ex_SR1) && (id_ex_sr1_needed) && (mem_wb_dr_needed) && (id_ex_dr_needed) && (mem_wb_v))
 			forwardmux1_sel = 2'b01;
 		else 
 			forwardmux1_sel = 2'b00;
 			
-		if((ex_mem_DR == id_ex_SR2) && (id_ex_sr2_needed) &&(ex_mem_dr_needed) && (id_ex_dr_needed))
+		if((ex_mem_DR == id_ex_SR2) && (id_ex_sr2_needed) &&(ex_mem_dr_needed) && (id_ex_dr_needed) && (ex_mem_v))
 			forwardmux2_sel = 2'b10;
-		else if((mem_wb_DR == id_ex_SR2) &&(id_ex_sr2_needed) && (mem_wb_dr_needed) && (id_ex_dr_needed))
+		else if((mem_wb_DR == id_ex_SR2) &&(id_ex_sr2_needed) && (mem_wb_dr_needed) && (id_ex_dr_needed) && (mem_wb_v))
 			forwardmux2_sel = 2'b01;	
 		else 
 			forwardmux2_sel = 2'b00;

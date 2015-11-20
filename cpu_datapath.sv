@@ -125,8 +125,10 @@ module cpu_datapath
 		logic dcacheWmux_sel;
 		logic dcacheRmux_out;
 		logic dcacheWmux_out;
-		
-
+		logic cccompmux_sel;
+		logic wbcccomp_out;
+		logic cccompmux_out;
+		lc3b_reg wbgencc_out;
 	//Memory-wb signals
 		logic load_mem_wb;
 		lc3b_word mem_wb_address_out;
@@ -156,8 +158,8 @@ assign i_mem_read = 1'b1;
 assign i_mem_byte_enable = 2'b11;
 assign i_mem_write = 1'b0;
 assign load_pc = i_mem_resp & !dcache_stall & !ldi_stall & !raw_hazard_stall;
-assign load_if_id = i_mem_resp & !dcache_stall & !raw_hazard_stall;
-assign if_id_v_in = !br_taken  & !uncond_pipe_flush;
+assign load_if_id = !dcache_stall & !raw_hazard_stall;
+assign if_id_v_in = i_mem_resp & !br_taken  & !uncond_pipe_flush;
 
 mux4 pcmux
 (
@@ -500,7 +502,9 @@ forwarding_unit forwarding_unit
 	.ex_mem_dr_needed(ex_mem_cs_out.dr_needed),
 	.mem_wb_sr1_needed(mem_wb_cs_out.sr1_needed),
 	.mem_wb_sr2_needed(mem_wb_cs_out.sr2_needed),
-	.mem_wb_dr_needed(mem_wb_cs_out.dr_needed),	
+	.mem_wb_dr_needed(mem_wb_cs_out.dr_needed),
+	.ex_mem_v(ex_mem_v_out),
+	.mem_wb_v(mem_wb_v_out),
 	.forwardmux1_sel(forwardmux1_sel),
 	.forwardmux2_sel(forwardmux2_sel)
 );
@@ -738,11 +742,41 @@ cccomp cccomp
 	.out(cccomp_out)
 );
 
+gencc wbgencc
+(
+	.in(mem_wb_aluresult_out),
+	.out(wbgencc_out)
+);
+
+
+cccomp wbcccomp
+(
+	.a(wbgencc_out),
+	.b(ex_mem_ir_out[11:9]),
+	.out(wbcccomp_out)
+);
+
+always_comb
+begin
+	if(mem_wb_cs_out.load_cc == 1)
+		cccompmux_sel = 1;
+	else
+		cccompmux_sel = 0;
+end
+
+mux2 #(.width(1)) cccompmux
+(
+	.sel(cccompmux_sel),
+	.a(cccomp_out),
+	.b(wbcccomp_out),
+	.f(cccompmux_out)
+);
+
 and3input br_and
 (
 	.r(ex_mem_v_out),
 	.x(ex_mem_cs_out.br_op),
-	.y(cccomp_out),
+	.y(cccompmux_out),
 	.z(br_taken)
 );
 
