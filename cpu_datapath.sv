@@ -44,7 +44,8 @@ module cpu_datapath
 		lc3b_word sr2_out;
 		lc3b_reg cc_out;
 		lc3b_control_word control_store;
-		logic hazard_stall;
+		logic raw_hazard_stall;
+		logic uncond_pipe_flush;
 	//Decode - Execute Signals
 		lc3b_word id_ex_pc_out;
 		lc3b_word id_ex_ir_out;
@@ -154,9 +155,9 @@ assign i_mem_wdata = 16'b0000000000000000;
 assign i_mem_read = 1'b1;
 assign i_mem_byte_enable = 2'b11;
 assign i_mem_write = 1'b0;
-assign load_pc = i_mem_resp & !dcache_stall & !ldi_stall & !hazard_stall;
-assign load_if_id = i_mem_resp & !dcache_stall & !hazard_stall;
-assign if_id_v_in = !br_taken;
+assign load_pc = i_mem_resp & !dcache_stall & !ldi_stall & !raw_hazard_stall;
+assign load_if_id = i_mem_resp & !dcache_stall & !raw_hazard_stall;
+assign if_id_v_in = !br_taken  & !uncond_pipe_flush;
 
 mux4 pcmux
 (
@@ -221,7 +222,9 @@ hazard_detection hazard_detection
 	.dcacheW(control_store.dcacheW),
 	.id_ex_sr1_needed(id_ex_cs_out.sr1_needed),
 	.id_ex_sr2_needed(id_ex_cs_out.sr2_needed),
-	.hazard_stall(hazard_stall)
+	.uncond_op(ex_mem_cs_out.uncond_op),
+	.uncond_pipe_flush(uncond_pipe_flush),
+	.raw_hazard_stall(raw_hazard_stall)
 );
 
 control_rom control_rom
@@ -276,7 +279,7 @@ mux2 #(.width(3)) dest_mux
 
 //Decode - Execute Pipe Components
 assign load_id_ex = id_ex_v_logic_out;
-assign id_ex_v_in = !br_taken & if_id_v_out;
+assign id_ex_v_in = !br_taken & if_id_v_out & !uncond_pipe_flush;
 
 id_ex_v_logic id_ex_v_logic
 (
@@ -527,7 +530,7 @@ mux3 forwardmux2
 
 //Execute-Memory Pipe Components
 assign load_ex_mem = !dcache_stall & !ldi_stall;
-assign ex_mem_v_in = !br_taken & id_ex_v_out;
+assign ex_mem_v_in = !br_taken & id_ex_v_out  & !uncond_pipe_flush;
 
 register ex_mem_address
 (

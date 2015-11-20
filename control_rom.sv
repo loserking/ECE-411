@@ -139,8 +139,8 @@ begin
 		  begin
 				//all we need to do is pass sr1_out from the regfile into the pc
 				ctrl.jmp_op = 1;
-				ctrl.load_reg = 1;
 				ctrl.sr1_needed = 1;
+				ctrl.uncond_op = 1;
 		  end
 		  
 		  op_jsr:
@@ -148,6 +148,7 @@ begin
 				ctrl.dest_mux_sel = 1;
 				ctrl.load_reg = 1;
 				ctrl.jsr_op = 1;
+				ctrl.uncond_op = 1;
 				
 				//then this goes into mem address and we send target pc to the pc
 				if(ir11 == 0)
@@ -179,6 +180,7 @@ begin
 				ctrl.addr3mux_sel = 1;
 				ctrl.dcache_enable = 1;
 				ctrl.dcacheR = 1;
+				ctrl.uncond_op = 1;
 				//pc_mux_sel gets 2'b10 and  sends mem_trap in the PC
 		  end
 		  

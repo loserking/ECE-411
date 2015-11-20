@@ -10,19 +10,29 @@ module hazard_detection
 	input logic dcacheW,
 	input logic id_ex_sr1_needed,
 	input logic id_ex_sr2_needed,
-	output logic hazard_stall
+	input logic uncond_op,
+	output logic raw_hazard_stall,
+	output logic uncond_pipe_flush
 );
 
 
 always_comb
 begin
-	hazard_stall = 0;
+	raw_hazard_stall = 0;
 	if(dcacheR)
 		if(((id_ex_dr == if_id_src1) && (!id_ex_sr1_needed)) || ((id_ex_dr == if_id_src2) && (id_ex_sr2_needed)) || ((dcacheW) && (id_ex_dr == if_id_srdr)))
 			//stall the pipe
-			hazard_stall = 1;
+			raw_hazard_stall = 1;
 	else
-		hazard_stall = 0;
+		raw_hazard_stall = 0;
+end
+
+always_comb
+begin
+	if(uncond_op)
+		uncond_pipe_flush = 1;
+	else
+		uncond_pipe_flush = 0;
 end
 
 endmodule : hazard_detection
