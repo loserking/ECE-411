@@ -664,7 +664,7 @@ assign dcache_stall = dcache_enable & !d_mem_resp;
 
 always_comb
 begin
-	if(!idle_state && id_ex_cs_out.uncond_op)
+	if(!idle_state && ex_mem_cs_out.load_reg)
 	begin
 		mem_wb_v_in = 1;
 		ex_mem_v_in = 0;
