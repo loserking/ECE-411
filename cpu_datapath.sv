@@ -671,13 +671,20 @@ begin
 		id_ex_v_in = 0;
 		if_id_v_in = 0;
 	end
-	else if(((mem_wb_src1_out == mem_wb_dest_out)||(mem_wb_src2_out == mem_wb_dest_out))&& (mem_wb_cs_out.load_reg) && (!idle_state))
+	if(!idle_state && ex_mem_cs_out.br_op && mem_wb_cs_out.load_reg)
+	begin
+		mem_wb_v_in = 1;
+		ex_mem_v_in = 1;
+		id_ex_v_in = 0;
+		if_id_v_in = 0;
+	end
+	/*else if(((mem_wb_src1_out == mem_wb_dest_out)||(mem_wb_src2_out == mem_wb_dest_out))&& (mem_wb_cs_out.load_reg) && (!idle_state))
 	begin
 		mem_wb_v_in = 0;
 		ex_mem_v_in = 0;
 		id_ex_v_in = 0;
 		if_id_v_in = 0;
-	end
+	end*/
 	else
 	begin
 		if_id_v_in = !br_taken  & !uncond_pipe_flush;
