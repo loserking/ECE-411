@@ -663,7 +663,14 @@ assign dcache_stall = dcache_enable & !d_mem_resp;
 
 always_comb
 begin
-	if(((mem_wb_src1_out == mem_wb_dest_out)||(mem_wb_src2_out == mem_wb_dest_out))&& (mem_wb_cs_out.load_reg) && (!idle_state))
+	if(!idle_state && id_ex_cs_out.uncond_op)
+	begin
+		mem_wb_v_in = 1;
+		ex_mem_v_in = 0;
+		id_ex_v_in = 0;
+		if_id_v_in = 0;
+	end
+	else if(((mem_wb_src1_out == mem_wb_dest_out)||(mem_wb_src2_out == mem_wb_dest_out))&& (mem_wb_cs_out.load_reg) && (!idle_state))
 	begin
 		mem_wb_v_in = 0;
 		ex_mem_v_in = 0;
