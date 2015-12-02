@@ -9,6 +9,7 @@ module forwarding_unit
 	input logic load_reg,
 	input lc3b_reg ex_mem_DR,
 	input lc3b_reg mem_wb_DR,
+	input lc3b_reg id_ex_dest,
 	input lc3b_reg id_ex_SR1,
 	input lc3b_reg id_ex_SR2,
 	input logic id_ex_sr1_needed,
@@ -53,7 +54,13 @@ begin
 		else 
 			forwardmux2_sel = 2'b00;
 	end
-
+	else
+	begin
+		if((id_ex_dest == mem_wb_DR) && (id_ex_dr_needed))
+			forwardmux2_sel = 2'b01;
+		else
+			forwardmux2_sel = 2'b00;
+	end
 
 end
 endmodule: forwarding_unit

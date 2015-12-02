@@ -504,6 +504,7 @@ forwarding_unit forwarding_unit
 	.load_reg(id_ex_cs_out.load_reg),
 	.ex_mem_DR(ex_mem_dest_out),
 	.mem_wb_DR(mem_wb_dest_out),
+	.id_ex_dest(id_ex_dest_out),
 	.id_ex_SR1(id_ex_src1_out),
 	.id_ex_SR2(id_ex_src2_out),
 	.id_ex_sr1_needed(id_ex_cs_out.sr1_needed),
