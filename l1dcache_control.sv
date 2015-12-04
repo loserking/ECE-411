@@ -82,7 +82,7 @@ begin : state_actions
 					else if(!way0and_out && hit)
 						lru_in = 0;
 				end
-				else if((mem_write && hit) && (mem_byte_enable != 2'b00))
+				else if((mem_write && hit && dcache_enable) && (mem_byte_enable != 2'b00))
 				begin
 					lru_write = 1;
 					if((mem_byte_enable == 2'b10) || (mem_byte_enable == 2'b01))

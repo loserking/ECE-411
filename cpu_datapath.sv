@@ -661,15 +661,34 @@ assign d_mem_byte_enable[0] = WE0;
 
 assign dcache_enable = ex_mem_cs_out.dcache_enable & ex_mem_v_out;
 assign dcache_stall = dcache_enable & !d_mem_resp;
+logic [2:0] condition;
 
 always_comb
 begin
+	if_id_v_in = !br_taken  & !uncond_pipe_flush;
+	id_ex_v_in = !br_taken & if_id_v_out & !uncond_pipe_flush; 
+	mem_wb_v_in = 	!br_taken & ex_mem_v_out;
+	if(if_id_ir_out == 16'b1110001000101111)
+		ex_mem_v_in = 0;
+	else
+		ex_mem_v_in = !br_taken & id_ex_v_out  & !uncond_pipe_flush;
+	condition = 3'b100;
+	
+	if(!idle_state && (mem_wb_cs_out.opcode == op_str) && (if_id_ir_out == mem_wb_ir_out))
+	begin
+		mem_wb_v_in = 0;
+		ex_mem_v_in = 0;
+		id_ex_v_in = 0;
+		if_id_v_in = 1;
+		condition = 3'b001;
+	end
 	if(!idle_state && ex_mem_cs_out.load_reg)
 	begin
 		mem_wb_v_in = 1;
 		ex_mem_v_in = 0;
 		id_ex_v_in = 0;
 		if_id_v_in = 0;
+		condition = 3'b000;
 	end
 	if(!idle_state && ex_mem_cs_out.br_op && mem_wb_cs_out.load_reg)
 	begin
@@ -677,20 +696,15 @@ begin
 		ex_mem_v_in = 1;
 		id_ex_v_in = 0;
 		if_id_v_in = 0;
+		condition = 3'b010;
 	end
-	/*else if(((mem_wb_src1_out == mem_wb_dest_out)||(mem_wb_src2_out == mem_wb_dest_out))&& (mem_wb_cs_out.load_reg) && (!idle_state))
+	if(((mem_wb_src1_out == mem_wb_dest_out)||(mem_wb_src2_out == mem_wb_dest_out))&& (mem_wb_cs_out.load_reg) && (!idle_state) && (mem_wb_cs_out.opcode == op_add))
 	begin
-		mem_wb_v_in = 0;
-		ex_mem_v_in = 0;
-		id_ex_v_in = 0;
 		if_id_v_in = 0;
-	end*/
-	else
-	begin
-		if_id_v_in = !br_taken  & !uncond_pipe_flush;
 		id_ex_v_in = !br_taken & if_id_v_out & !uncond_pipe_flush; 
-		ex_mem_v_in = !br_taken & id_ex_v_out  & !uncond_pipe_flush;
-		mem_wb_v_in = !br_taken & ex_mem_v_out;
+		ex_mem_v_in = 0;
+		mem_wb_v_in = 0;
+		condition = 3'b011;
 	end
 end
 
