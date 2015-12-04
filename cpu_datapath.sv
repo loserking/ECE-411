@@ -522,12 +522,13 @@ forwarding_unit forwarding_unit
 	.forwardmux2_sel(forwardmux2_sel)
 );
 
-mux3 forwardmux1
+mux4 forwardmux1
 (
 	.sel(forwardmux1_sel),
 	.a(id_ex_sr1_out),
 	.b(wbmux_out),
 	.c(ex_mem_aluresult_out),
+	.d(ex_mem_address_out),
 	.f(forwardmux1_out)
 
 );

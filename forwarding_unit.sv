@@ -58,9 +58,11 @@ begin
 	begin
 		if((id_ex_dest == mem_wb_DR) && (id_ex_dr_needed))
 			forwardmux2_sel = 2'b01;
+		else if((ex_mem_DR == id_ex_SR1)&&(id_ex_sr1_needed))
+			forwardmux1_sel = 2'b11;
 		else
 			forwardmux2_sel = 2'b00;
 	end
-
+	
 end
 endmodule: forwarding_unit
