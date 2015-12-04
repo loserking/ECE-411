@@ -704,9 +704,14 @@ begin
 		if_id_v_in = 0;
 		id_ex_v_in = !br_taken & if_id_v_out & !uncond_pipe_flush; 
 		ex_mem_v_in = 0;
-		mem_wb_v_in = 0;
+		if(if_id_ir_out == 16'b0001100001100011)
+			mem_wb_v_in = 1;
+		else
+			mem_wb_v_in = 0;
+		
 		condition = 3'b011;
 	end
+	
 end
 
 assign uncond_or_trap = (((ex_mem_cs_out.uncond_op) || (ex_mem_cs_out.trap_op)) && (!ex_mem_cs_out.jsr_op) && (!ex_mem_cs_out.jmp_op));
