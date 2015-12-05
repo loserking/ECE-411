@@ -12,6 +12,11 @@ module l2cache_datapath
 	 input logic dirty0write, dirty1write,
 	 input logic dirty0_in, dirty1_in,
 	 input logic valid0write, valid1write,
+	 input logic valid2write, valid3write,
+	 input logic dirty2_in, dirty3_in,
+	 input logic dirty2write, dirty3write,
+	 input logic tag2write, tag3write,
+	 input logic data2write, data3write,
 	 input logic lru_in,
 	 input logic lru_write,
 	 input [1:0] mem_byte_enable,
@@ -43,6 +48,23 @@ assign offset = mem_address[3:1];
 assign offsetlast = mem_address[0];
 assign valid = 1'b1;
 
+/*way 3 signals*/
+tag_size tag3_out;
+logic way3tag_comp_out;
+logic valid3_out;
+logic way3and_out;
+logic dirty3_out;
+cache_line data3_out;
+
+
+
+/*way 2 signals*/
+tag_size tag2_out;
+logic way2tag_comp_out;
+logic valid2_out;
+logic way2and_out;
+logic dirty2_out;
+cache_line data2_out;
 
 /*way 1 signals */
 logic valid1_out;
@@ -206,6 +228,114 @@ eighteightconcat splitconcat
 );
 */
 //more unnecessary components for l2 cache
+
+/* Way 3 logic*/
+tag_comp way3tag_comp
+(
+	.cache_in(tag),
+	.mem_address_in(tag3_out),
+	.out(way3tag_comp_out)
+);
+
+and2input way3and
+(
+	.x(valid3_out),
+	.y(way3tag_comp_out),
+	.z(way3and_out)
+);
+
+/*Way 1 arrays begin*/
+array #(.width(1)) valid3
+(
+	.clk,
+	.write(valid3write),
+	.index(index),
+	.datain(valid),
+	.dataout(valid3_out)
+);
+
+array #(.width(1)) dirty3
+(
+	.clk,
+	.write(dirty3write),
+	.index(index),
+	.datain(dirty3_in),
+	.dataout(dirty3_out)
+);
+
+
+array #(.width(9)) tag3
+(
+	.clk,
+	.write(tag3write),
+	.index(index),
+	.datain(tag),
+	.dataout(tag3_out)
+);
+
+array data3
+(
+	.clk,
+   .write(data3write),
+   .index(index),
+   .datain(rwmux_out),
+   .dataout(data3_out)
+);
+
+
+/* Way 2 logic*/
+tag_comp way2tag_comp
+(
+	.cache_in(tag),
+	.mem_address_in(tag2_out),
+	.out(way2tag_comp_out)
+);
+
+and2input way2and
+(
+	.x(valid2_out),
+	.y(way2tag_comp_out),
+	.z(way2and_out)
+);
+
+/*Way 2 arrays begin*/
+array #(.width(1)) valid2
+(
+	.clk,
+	.write(valid2write),
+	.index(index),
+	.datain(valid),
+	.dataout(valid2_out)
+);
+
+array #(.width(1)) dirty2
+(
+	.clk,
+	.write(dirty2write),
+	.index(index),
+	.datain(dirty2_in),
+	.dataout(dirty2_out)
+);
+
+
+array #(.width(9)) tag2
+(
+	.clk,
+	.write(tag2write),
+	.index(index),
+	.datain(tag),
+	.dataout(tag2_out)
+);
+
+array data2
+(
+	.clk,
+   .write(data2write),
+   .index(index),
+   .datain(rwmux_out),
+   .dataout(data2_out)
+);
+
 
 /* Way 1 logic*/
 tag_comp way1tag_comp

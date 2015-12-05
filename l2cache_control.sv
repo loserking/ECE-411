@@ -32,6 +32,11 @@ module l2cache_control
 	 output logic valid0write, valid1write,
 	 output logic dirty0write, dirty1write,
 	 output logic dirty0_in, dirty1_in,
+	 output logic data2write, data3write,
+	 output logic tag2write, tag3write,
+	 output logic valid2write, valid3write,
+	 output logic dirty2write, dirty3write,
+	 output logic dirty2_in, dirty3_in,
     output logic pmem_write,
 	 output logic pmemmux_sel,
 	 output logic lru_write     
@@ -61,6 +66,16 @@ begin : state_actions
 	 dirty1write = 1'b0;
 	 dirty0_in = 1'b0;
 	 dirty1_in = 1'b0;
+	 
+	 tag3write = 1'b0;
+	 data2write = 1'b0;
+	 data3write = 1'b0;
+	 valid2write = 1'b0;
+	 valid3write = 1'b0;
+	 dirty2write = 1'b0;
+	 dirty3write = 1'b0;
+	 dirty2_in = 1'b0;
+	 dirty3_in = 1'b0;
 	 mem_resp = 1'b0;
 	 pmem_read = 1'b0;
 	 lru_in = 1'b0;
