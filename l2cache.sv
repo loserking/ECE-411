@@ -29,16 +29,22 @@ module l2cache
 
 /*internal signals*/
 logic hit;
-logic lru_out;
+logic [1:0] pseudolru_out;
 logic data0write;
 logic data1write;
 logic valid0write;
 logic valid1write;
 logic tag0write;
 logic tag1write;
+logic data2write;
+logic data3write;
+logic valid2write;
+logic valid3write;
+logic tag2write;
+logic tag3write;
 logic lru_in;
 logic way0and_out;
-logic lru_write;
+logic pseudolru_write;
 logic dirtymux_out;
 logic stbwritemux_sel;
 logic rwmux_sel;
@@ -46,6 +52,10 @@ logic dirty0write;
 logic dirty1write;
 logic dirty0_in;
 logic dirty1_in;
+logic dirty2write;
+logic dirty3write;
+logic dirty2_in;
+logic dirty3_in;
 logic pmemmux_sel;
 
 
@@ -59,10 +69,10 @@ l2cache_control l2cache_control
 	 .mem_write(l2_mem_write),
 	 .mem_read(l2_mem_read),
 	 .mem_wdata(l2_mem_wdata),
-	 .lru_out(lru_out),
-	 .lru_in(lru_in),
+	 .pseudolru_out(pseudolru_out),
+	 //.lru_in(lru_in),
 	 .way0and_out(way0and_out),
-	 .lru_write(lru_write),
+	 .pseudolru_write(pseudolru_write),
 	 
      
      /* Datapath controls */
@@ -128,8 +138,8 @@ l2cache_datapath  l2cache_datapath
 	 .l2_mem_wdata(l2_mem_wdata),
 	 .l2_mem_rdata(l2_mem_rdata),
 	 .mem_byte_enable(l2_mem_byte_enable),
-	 .lru_in(lru_in),
-	 .lru_write(lru_write),
+	 //.lru_in(lru_in),
+	 .pseudolru_write(pseudolru_write),
 	 .way0and_out(way0and_out),
 	 .rwmux_sel(rwmux_sel),
 	 .stbwritemux_sel(stbwritemux_sel),
@@ -137,7 +147,7 @@ l2cache_datapath  l2cache_datapath
 
     .hit(hit),
 	 .dirtymux_out(dirtymux_out),
-	 .lru_out(lru_out),
+	 .pseudolru_out(pseudolru_out),
 	 .pmem_address(pmem_address),
 	 .pmem_wdata(pmem_wdata)
 );

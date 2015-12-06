@@ -17,8 +17,7 @@ module l2cache_datapath
 	 input logic dirty2write, dirty3write,
 	 input logic tag2write, tag3write,
 	 input logic data2write, data3write,
-	 input logic lru_in,
-	 input logic lru_write,
+	 input logic pseudolru_write,
 	 input [1:0] mem_byte_enable,
 	 input logic rwmux_sel,
 	 input logic stbwritemux_sel,
@@ -28,7 +27,7 @@ module l2cache_datapath
 	 output cache_line l2_mem_rdata,  //Needs to be cache_line l2_mem_rdata	
 
     output logic hit,
-	 output logic lru_out,
+	 output logic [1:0] pseudolru_out,
 	 output logic way0and_out,
 	 output logic dirtymux_out,
 	 output cache_line pmem_wdata,
@@ -96,36 +95,53 @@ cache_line rwmux_out;
 tag_size tagmux_out;
 
 /*combined way logic*/
-or2input hitcheck
+or4input hitcheck
 (
 	.x(way0and_out),
 	.y(way1and_out),
+	.q(way2and_out),
+	.r(way3and_out),
 	.z(hit)
 );
 
 
-array #(.width(1)) lru
+/*array #(.width(1)) lru
 (
 	.clk,
 	.write(lru_write),
 	.index(index),
 	.datain(lru_in),
 	.dataout(lru_out)
+);*/
+
+pseudolru pseudolru
+(
+	.clk,
+	.pseudolru_write(pseudolru_write),
+	.valid0out(valid0_out),
+	.valid1out(valid1_out),
+	.valid2out(valid2_out),
+	.valid3out(valid3_out),
+	.lru(pseudolru_out)
 );
 
-mux2 #(.width(128)) evictdatamux
+mux4 #(.width(128)) evictdatamux
 (
-    .sel(lru_out),
+    .sel(pseudolru_out),
 	 .a(data0_out),
 	 .b(data1_out),
+	 .c(data2_out),
+	 .d(data3_out),
 	 .f(pmem_wdata)
 );
 
-mux2 #(.width(9)) tagmux
+mux4 #(.width(9)) tagmux
 (
-    .sel(lru_out),
+    .sel(pseudolru_out),
 	 .a(tag0_out),
 	 .b(tag1_out),
+	 .c(tag2_out),
+	 .d(tag3_out),
 	 .f(tagmux_out)
 );
 
@@ -137,11 +153,13 @@ mux2 #(.width(16)) pmemmux
 	 .f(pmem_address)
 );
 
-mux2 #(.width(1)) dirtymux
+mux4 #(.width(1)) dirtymux
 (
-    .sel(lru_out),
+    .sel(pseudolru_out),
 	 .a(dirty0_out),
 	 .b(dirty1_out),
+	 .c(dirty2_out),
+	 .d(dirty3_out),
 	 .f(dirtymux_out)
 );
 /*
@@ -173,12 +191,29 @@ sixteenonetwentyeightconcat cache_lineconcat
 );
 */
 //Don't think this is used by l2cache
+logic [1:0] datamux_sel;
 
-mux2 #(.width(128)) datamux
+always_comb
+begin
+	if(way0and_out)
+		datamux_sel = 2'b00;
+	else if(way1and_out)
+		datamux_sel = 2'b01;
+	else if(way2and_out)
+		datamux_sel = 2'b10;
+	else if(way3and_out)
+		datamux_sel = 2'b11;
+	else
+		datamux_sel = 2'b00;
+end
+
+mux4 #(.width(128)) datamux
 (
-    .sel(way1and_out),
+    .sel(datamux_sel),
 	 .a(data0_out),
 	 .b(data1_out),
+	 .c(data2_out),
+	 .d(data3_out),
 	 .f(datamux_out)
 );
 
@@ -244,7 +279,7 @@ and2input way3and
 	.z(way3and_out)
 );
 
-/*Way 1 arrays begin*/
+/*Way 3 arrays begin*/
 array #(.width(1)) valid3
 (
 	.clk,

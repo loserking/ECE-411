@@ -12,7 +12,7 @@ module l2cache_control
 	 input mem_write,
 	 input mem_read,
 	 input cache_line mem_wdata,
-	 input logic lru_out,
+	 input logic [1:0] pseudolru_out,
 	 input logic way0and_out,
 	 
      
@@ -24,7 +24,7 @@ module l2cache_control
 	 
 	 output logic rwmux_sel,
 	 output logic stbwritemux_sel,
-	 output logic lru_in,
+	 //output logic lru_in,
 	 output logic mem_resp,
     output logic pmem_read,
 	 output logic data0write, data1write,
@@ -39,7 +39,7 @@ module l2cache_control
 	 output logic dirty2_in, dirty3_in,
     output logic pmem_write,
 	 output logic pmemmux_sel,
-	 output logic lru_write     
+	 output logic pseudolru_write     
 );
 
 enum int unsigned {
@@ -66,7 +66,7 @@ begin : state_actions
 	 dirty1write = 1'b0;
 	 dirty0_in = 1'b0;
 	 dirty1_in = 1'b0;
-	 
+	 tag2write = 1'b0;
 	 tag3write = 1'b0;
 	 data2write = 1'b0;
 	 data3write = 1'b0;
@@ -78,27 +78,27 @@ begin : state_actions
 	 dirty3_in = 1'b0;
 	 mem_resp = 1'b0;
 	 pmem_read = 1'b0;
-	 lru_in = 1'b0;
-	 lru_write = 1'b0;
+	 //lru_in = 1'b0;
+	 pseudolru_write = 1'b0;
 	 pmem_write = 1'b0;
 	 pmemmux_sel = 1'b0;
     /* Actions for each state */
      
      case(state)
         s_idle: begin
-				lru_write = 0;
+				pseudolru_write = 0;
 				if(mem_read && hit)
 				begin
 					mem_resp = 1;
-					lru_write = 1;
-					if(way0and_out && hit)
+					pseudolru_write = 1;
+					/*if(way0and_out && hit)
 						lru_in = 1;
 					else if(!way0and_out && hit)
-						lru_in = 0;
+						lru_in = 0;*/
 				end
 				else if((mem_write && hit) && (mem_byte_enable != 2'b00))
 				begin
-					lru_write = 1;
+					pseudolru_write = 1;
 					if(way0and_out)
 						begin
 							data0write = 1;
@@ -106,7 +106,7 @@ begin : state_actions
 							valid0write = 1;
 							dirty0write = 1;
 							dirty0_in = 1;
-							lru_in = 1;
+							//lru_in = 1;
 						end
 						else 
 						begin
@@ -115,7 +115,7 @@ begin : state_actions
 							valid1write = 1;
 							dirty1write = 1;
 							dirty1_in = 1;
-							lru_in = 0;
+							//lru_in = 0;
 						end
 						mem_resp = 1;
 						rwmux_sel = 1;
@@ -123,11 +123,11 @@ begin : state_actions
 				end
 		  s_update_cache: begin
 				if(mem_read)
-					lru_write = 1;
-					if(way0and_out && hit)
+					pseudolru_write = 1;
+					/*if(way0and_out && hit)
 						lru_in = 1;
 					else if(!way0and_out && hit)
-						lru_in = 0;
+						lru_in = 0;*/
 		  end
 		  s_pmem_complete: begin
 				if(mem_write)
@@ -135,23 +135,39 @@ begin : state_actions
 					if((mem_byte_enable == 2'b10) | (mem_byte_enable == 2'b01))
 						stbwritemux_sel = 1;
 					rwmux_sel = 1;
-					if(lru_out == 0)
+					if(pseudolru_out == 2'b00)
 					begin
 						data0write = 1;
 						tag0write = 1;
 						valid0write = 1;
 						dirty0write = 1;
 						dirty0_in = 1;
-						lru_in = 1;
+						//lru_in = 1;
 					end
-					else 
+					else if(pseudolru_out == 2'b01)
 					begin
 						data1write = 1;
 						tag1write = 1;
 						valid1write = 1;
 						dirty1write = 1;
 						dirty1_in = 1;
-						lru_in = 0;
+						//lru_in = 0;
+					end
+					else if(pseudolru_out == 2'b10)
+					begin
+						data2write = 1;
+						tag2write = 1;
+						valid2write = 1;
+						dirty2write = 1;
+						dirty2_in = 1;
+					end
+					else if(pseudolru_out == 2'b11)
+					begin
+						data3write = 1;
+						tag3write = 1;
+						valid3write = 1;
+						dirty3write = 1;
+						dirty3_in = 1;
 					end
 				end
 				mem_resp = 1;
@@ -162,22 +178,40 @@ begin : state_actions
 		  end
 		  s_allocate: begin
 				pmem_read = 1;
-				if(lru_out == 0)
-				begin
-					data0write = 1;
-					tag0write = 1;
-					valid0write = 1;
-					dirty0write = 1;
-					dirty0_in =0;
-				end
-				else 
-				begin
-					data1write = 1;
-					tag1write = 1;
-					valid1write = 1;
-					dirty1write = 1;
-					dirty1_in = 0;
-				end
+				if(pseudolru_out == 2'b00)
+					begin
+						data0write = 1;
+						tag0write = 1;
+						valid0write = 1;
+						dirty0write = 1;
+						dirty0_in = 1;
+						//lru_in = 1;
+					end
+					else if(pseudolru_out == 2'b01)
+					begin
+						data1write = 1;
+						tag1write = 1;
+						valid1write = 1;
+						dirty1write = 1;
+						dirty1_in = 1;
+						//lru_in = 0;
+					end
+					else if(pseudolru_out == 2'b10)
+					begin
+						data2write = 1;
+						tag2write = 1;
+						valid2write = 1;
+						dirty2write = 1;
+						dirty2_in = 1;
+					end
+					else if(pseudolru_out == 2'b11)
+					begin
+						data3write = 1;
+						tag3write = 1;
+						valid3write = 1;
+						dirty3write = 1;
+						dirty3_in = 1;
+					end
 		  end
      default:/* Do nothing */;
      endcase 
@@ -193,7 +227,7 @@ begin : next_state_logic
          s_idle:
 				if(mem_read && hit)
 					next_state = s_idle;
-				else if(!hit && !dirtymux_out)
+				else if(!hit && !dirtymux_out && (mem_read || mem_write))
 					next_state = s_allocate;
 				else if(!hit && dirtymux_out)
 					next_state = s_write_back;
