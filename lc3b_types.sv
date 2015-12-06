@@ -33,6 +33,7 @@ typedef enum bit [3:0] {
     op_sti  = 4'b1011,
     op_str  = 4'b0111,
     op_trap = 4'b1111
+
 } lc3b_opcode;
 
 typedef enum bit [3:0] {
@@ -45,13 +46,11 @@ typedef enum bit [3:0] {
     alu_srl,
     alu_sra,
 	 alu_sub,
-	 alu_mult,
-	 alu_div,
-	 alu_or,
 	 alu_xor,
-	 alu_xnor,
+	 alu_or,
 	 alu_nor,
-	 alu_nand
+	 alu_xnor,
+	 alu_nand 
 		  
 } lc3b_aluop;
 
@@ -79,7 +78,7 @@ typedef struct packed
 	logic jmp_op;
 	lc3b_word pc;
 	logic dest_mux_sel;
-	logic alu_result_mux_sel;
+	logic [1:0] alu_result_mux_sel;
 	logic d_mem_byte_sel;
 	logic stb_op;
 	logic ldi_op;
@@ -88,6 +87,17 @@ typedef struct packed
 	logic sr1_needed;
 	logic sr2_needed;
 	logic dr_needed;
+	
+	logic div_op;
+	logic mult_op; 
+	logic sub_op;
+	logic xor_op;
+	logic or_op;
+	logic nor_op;
+	logic xnor_op;
+	logic nand_op;
+	logic ldbse_op;
+	 
 	
 }lc3b_control_word;
 

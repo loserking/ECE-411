@@ -21,8 +21,6 @@ begin
 		  
 		  //LC3X
 		  alu_sub: f = a -b;
-		  alu_mult: f = a * b;
-		  alu_div: f = a / b;
 		  alu_or: f = a | b;
 		  alu_xor: f = a^b;
 		  alu_xnor: f = ~(a^b);

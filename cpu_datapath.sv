@@ -76,6 +76,8 @@ module cpu_datapath
 		lc3b_word addressadder_out;
 		lc3b_word sr2mux_out;
 		lc3b_word alu_out;
+		lc3b_word mult_out;
+		lc3b_word div_out;
 		lc3b_word shft_out;
 		lc3b_word alu_result_mux_out;
 		lc3b_word forwardmux1_out;
@@ -244,6 +246,8 @@ hazard_detection hazard_detection
 control_rom control_rom
 (
 	.opcode(lc3b_opcode'(if_id_ir_out[15:12])),
+	.lc3x_control(if_id_ir_out[5:3]),
+	.ir4(if_id_ir_out[5]),
 	.ir5(if_id_ir_out[5]),
 	.ir11(if_id_ir_out[11]),
 	.pc(if_id_pc_out),
@@ -470,11 +474,29 @@ shft shft
 	.out(shft_out)
 );
 
-mux2 alu_result_mux
+mult mult
+(
+	.dataa(forwardmux1_out),
+	.datab(forwardmux2_out),
+	.result(mult_out)
+
+);
+
+div div
+(
+	.denom(forwardmux2_out),
+	.numer(forwardmux1_out),
+	.quotient(div_out),
+	.remain()
+);
+
+mux4 alu_result_mux
 (
 	.sel(id_ex_cs_out.alu_result_mux_sel),
 	.a(alu_out), //default 0 for just alu_out
 	.b(shft_out), // 1 for when we shift
+	.c(mult_out),
+	.d(div_out),
 	.f(alu_result_mux_out)
 
 );
