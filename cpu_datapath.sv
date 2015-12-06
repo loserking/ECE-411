@@ -111,8 +111,11 @@ module cpu_datapath
 		logic [1:0] ldisticounterout;
 		lc3b_word HBzext_out;
 		lc3b_word LBzext_out;
+		lc3b_word HBsext_out;
+		lc3b_word LBsext_out;
 		lc3b_word dcachemux_out;
 		lc3b_word dcachemux2_out;
+		lc3b_word ldbseDcacheMux_out;
 		lc3b_word bytefill_out;
 		lc3b_word dcachewritemux_out;
 		logic andWE0_out;
@@ -250,6 +253,7 @@ control_rom control_rom
 	.ir4(if_id_ir_out[4]),
 	.ir5(if_id_ir_out[5]),
 	.ir11(if_id_ir_out[11]),
+	.ldbseCheck(if_id_ir_out[5:0]),
 	.pc(if_id_pc_out),
 	.ctrl(control_store)
 );
@@ -909,14 +913,45 @@ mux2 dcachemux
 
 );
 
-mux2 dcachemux2
+mux3 dcachemux2
 (
 	.sel(ex_mem_cs_out.d_mem_byte_sel),
 	.a(d_mem_rdata),
 	.b(dcachemux_out),
+	.c(ldbseDcacheMux_out),
 	.f(dcachemux2_out)
 
 );
+
+/*LDBSE*/
+sext #(.width(8)) HBsext
+(
+	.in(d_mem_rdata[15:8]),
+	.out(HBsext_out)
+
+
+);
+sext #(.width(8)) LBsext
+(
+	
+	.in(d_mem_rdata[7:0]),
+	.out(LBsext_out)
+
+);
+
+mux2 ldbseDcacheMux
+(
+	.sel(ex_mem_address_out[0]),
+	.a(LBsext_out),
+	.b(HBsext_out),
+	.f(ldbseDcacheMux_out)
+
+);
+
+
+
+
+
 /*STB*/
 
 bytefill #(.width(8)) bytefill

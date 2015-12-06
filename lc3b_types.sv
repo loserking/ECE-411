@@ -81,7 +81,7 @@ typedef struct packed
 	lc3b_word pc;
 	logic dest_mux_sel;
 	logic [1:0] alu_result_mux_sel;
-	logic d_mem_byte_sel;
+	logic [1:0] d_mem_byte_sel;
 	logic stb_op;
 	logic ldi_op;
 	logic sti_op;

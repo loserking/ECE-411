@@ -9,6 +9,7 @@ module control_rom
 	 input logic [2:0] lc3x_control,
 	 input logic ir4,
     input logic ir5,
+	 input logic [5:0] ldbseCheck,
 	 input lc3b_word pc,
     output lc3b_control_word ctrl
 );
@@ -40,7 +41,7 @@ begin
 	 ctrl.dcache_enable = 1'b0;
 	 ctrl.dest_mux_sel = 1'b0;
 	 ctrl.alu_result_mux_sel = 2'b00;
-	 ctrl.d_mem_byte_sel = 1'b0;
+	 ctrl.d_mem_byte_sel = 2'b00;
 	 ctrl.stb_op = 1'b0;
 	 ctrl.ldi_op = 1'b0;
 	 ctrl.sti_op = 1'b0;
@@ -162,6 +163,21 @@ begin
 				ctrl.jmp_op = 1;
 				ctrl.sr1_needed = 1;
 				ctrl.uncond_op = 1;
+				
+				if(ldbseCheck != 6'b000000)
+				begin
+					ctrl.addr1mux_sel = 1;
+					ctrl.addr2mux_sel = 2'b01;
+					ctrl.wbmux_sel = 2'b01;
+					ctrl.load_cc = 1;
+					ctrl.load_reg = 1;
+					ctrl.dcache_enable = 1;
+					ctrl.dcacheR = 1;
+					ctrl.d_mem_byte_sel = 2'b11;
+					ctrl.ldb_op = 1;
+					ctrl.sr1_needed = 1;
+					ctrl.dr_needed = 1;
+				end
 		  end
 		  
 		  op_jsr:
@@ -225,7 +241,7 @@ begin
 				ctrl.load_reg = 1;
 				ctrl.dcache_enable = 1;
 				ctrl.dcacheR = 1;
-				ctrl.d_mem_byte_sel = 1;
+				ctrl.d_mem_byte_sel = 2'b01;
 				ctrl.ldb_op = 1;
 				ctrl.sr1_needed = 1;
 				ctrl.dr_needed = 1;
@@ -276,16 +292,19 @@ begin
 		 
 		 op_rti:
 		 begin
-			ctrl.load_reg = 1;
-			if(lc3x_control == 3'b000)  //div
+				ctrl.load_reg = 1;
+				
+			if(lc3x_control == 3'b000 )  //div
 			begin
 				ctrl.div_op = 1;
 				ctrl.aluop = alu_div;
 				ctrl.load_cc = 1;
+				ctrl.load_reg = 1;
 				ctrl.wbmux_sel = 2'b11;
 				ctrl.sr1_needed = 1;
 				ctrl.sr2_needed = 1;
 				ctrl.dr_needed = 1;
+			
 			end
 			if(lc3x_control == 3'b001) //mult
 			begin
