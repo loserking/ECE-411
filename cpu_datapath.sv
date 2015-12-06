@@ -247,7 +247,7 @@ control_rom control_rom
 (
 	.opcode(lc3b_opcode'(if_id_ir_out[15:12])),
 	.lc3x_control(if_id_ir_out[5:3]),
-	.ir4(if_id_ir_out[5]),
+	.ir4(if_id_ir_out[4]),
 	.ir5(if_id_ir_out[5]),
 	.ir11(if_id_ir_out[11]),
 	.pc(if_id_pc_out),

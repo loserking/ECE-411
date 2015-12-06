@@ -276,11 +276,11 @@ begin
 		 
 		 op_rti:
 		 begin
+			ctrl.load_reg = 1;
 			if(lc3x_control == 3'b000)  //div
 			begin
 				ctrl.div_op = 1;
-				ctrl.alu_result_mux_sel = 2'b11;
-				ctrl.load_reg = 1;
+				ctrl.aluop = alu_div;
 				ctrl.load_cc = 1;
 				ctrl.wbmux_sel = 2'b11;
 				ctrl.sr1_needed = 1;
@@ -290,8 +290,8 @@ begin
 			if(lc3x_control == 3'b001) //mult
 			begin
 				ctrl.mult_op = 1;
-				ctrl.alu_result_mux_sel = 2'b10;
-				ctrl.load_reg = 1;
+				ctrl.aluop = alu_mult;
+			
 				ctrl.load_cc = 1;
 				ctrl.wbmux_sel = 2'b11;
 				ctrl.sr1_needed = 1;
@@ -302,7 +302,7 @@ begin
 			begin
 				ctrl.sub_op = 1;
 				ctrl.aluop = alu_sub;
-				ctrl.load_reg = 1;
+				
 				ctrl.load_cc = 1;
 				ctrl.wbmux_sel = 2'b11;
 				ctrl.sr1_needed = 1;
@@ -313,7 +313,7 @@ begin
 			begin
 				ctrl.xor_op = 1;
 				ctrl.aluop = alu_xor;
-				ctrl.load_reg = 1;
+		
 				ctrl.load_cc = 1;
 				ctrl.wbmux_sel = 2'b11;
 				ctrl.sr1_needed = 1;
@@ -325,7 +325,7 @@ begin
 			begin
 				ctrl.or_op = 1;
 				ctrl.aluop = alu_or;
-				ctrl.load_reg = 1;
+				
 				ctrl.load_cc = 1;
 				ctrl.wbmux_sel = 2'b11;
 				ctrl.sr1_needed = 1;
@@ -335,7 +335,7 @@ begin
 			if(lc3x_control == 3'b101) //nor
 			begin
 				ctrl.nor_op = 1;
-				ctrl.aluop = alu_nor;
+				
 				ctrl.load_reg = 1;
 				ctrl.load_cc = 1;
 				ctrl.wbmux_sel = 2'b11;
@@ -346,7 +346,7 @@ begin
 			if(lc3x_control == 3'b110) //xnor
 			begin
 				ctrl.xnor_op = 1;
-				ctrl.aluop = alu_xnor;
+				
 				ctrl.load_reg = 1;
 				ctrl.load_cc = 1;
 				ctrl.wbmux_sel = 2'b11;

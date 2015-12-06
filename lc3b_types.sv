@@ -50,7 +50,9 @@ typedef enum bit [3:0] {
 	 alu_or,
 	 alu_nor,
 	 alu_xnor,
-	 alu_nand 
+	 alu_nand ,
+	 alu_mult, 
+	 alu_div
 		  
 } lc3b_aluop;
 
